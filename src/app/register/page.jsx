@@ -6,17 +6,20 @@ import Link from "next/link";
 import { Input } from "../../components/common/Input";
 import { Button } from "../../components/common/Button";
 import { AuthLayout } from "../../components/layout/AuthLayout";
+import { supabase } from "../../lib/supabaseClient";
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [formData, setFormData] = useState({ 
-    name: "", 
-    email: "", 
-    password: "", 
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
     confirmPassword: "",
-    role: "patient" 
+    role: "patient",
   });
   const [errors, setErrors] = useState({});
+  const [authError, setAuthError] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const validate = () => {
@@ -24,7 +27,7 @@ export default function RegisterPage() {
     if (!formData.name) newErrors.name = "Name is required";
     if (!formData.email) newErrors.email = "Email is required";
     else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = "Invalid email format";
-    
+
     if (!formData.password) {
       newErrors.password = "Password is required";
     } else if (formData.password.length < 6) {
@@ -36,7 +39,7 @@ export default function RegisterPage() {
     } else if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = "Passwords do not match";
     }
-    
+
     return newErrors;
   };
 
@@ -49,25 +52,39 @@ export default function RegisterPage() {
     }
 
     setErrors({});
+    setAuthError("");
+    setSuccessMsg("");
     setIsLoading(true);
 
-    console.log("Register Form Data:", formData);
+    const { error } = await supabase.auth.signUp({
+      email: formData.email,
+      password: formData.password,
+      options: {
+        data: {
+          name: formData.name,
+          role: formData.role,
+        },
+      },
+    });
 
-    localStorage.setItem("vitalsync_role", formData.role);
-    localStorage.setItem("vitalsync_name", formData.name);
-
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    if (error) {
+      setAuthError(error.message);
+      setIsLoading(false);
+      return;
+    }
 
     setIsLoading(false);
-    router.push("/login"); 
+    setSuccessMsg("Account created! Please check your email to confirm, then log in.");
+
+    // Redirect to login after a short delay
+    setTimeout(() => router.push("/login"), 3000);
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: "" }));
-    }
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
+    if (authError) setAuthError("");
   };
 
   return (
@@ -75,7 +92,19 @@ export default function RegisterPage() {
       <h2 className="text-[28px] font-bold text-[#111827] tracking-tight mb-8">
         Create an Account
       </h2>
-      
+
+      {authError && (
+        <div className="mb-5 px-4 py-3 rounded-xl bg-[#FEF2F2] border border-[#FECACA] text-[#DC2626] text-[14px] font-medium">
+          {authError}
+        </div>
+      )}
+
+      {successMsg && (
+        <div className="mb-5 px-4 py-3 rounded-xl bg-[#F0FDF4] border border-[#BBF7D0] text-[#16A34A] text-[14px] font-medium">
+          {successMsg}
+        </div>
+      )}
+
       <form className="space-y-5" onSubmit={handleSubmit}>
         <div className="flex flex-col w-full">
           <label className="text-[14px] font-medium text-[#111827] mb-2">Registering as a</label>
@@ -84,8 +113,8 @@ export default function RegisterPage() {
               type="button"
               onClick={() => setFormData(prev => ({ ...prev, role: 'patient' }))}
               className={`border py-2.5 px-4 rounded-xl text-[15px] transition-all font-semibold ${
-                formData.role === 'patient' 
-                  ? 'bg-[#EEF2FF] border-[#4F46E5] text-[#4F46E5]' 
+                formData.role === 'patient'
+                  ? 'bg-[#EEF2FF] border-[#4F46E5] text-[#4F46E5]'
                   : 'bg-[#F9FAFB] border-[#E5E7EB] text-[#6B7280]'
               }`}
             >
@@ -95,8 +124,8 @@ export default function RegisterPage() {
               type="button"
               onClick={() => setFormData(prev => ({ ...prev, role: 'doctor' }))}
               className={`border py-2.5 px-4 rounded-xl text-[15px] transition-all font-semibold ${
-                formData.role === 'doctor' 
-                  ? 'bg-[#EEF2FF] border-[#4F46E5] text-[#4F46E5]' 
+                formData.role === 'doctor'
+                  ? 'bg-[#EEF2FF] border-[#4F46E5] text-[#4F46E5]'
                   : 'bg-[#F9FAFB] border-[#E5E7EB] text-[#6B7280]'
               }`}
             >
@@ -149,7 +178,7 @@ export default function RegisterPage() {
           Register
         </Button>
       </form>
-      
+
       <p className="mt-8 text-center text-[14px] text-[#6B7280]">
         Already have an account?{' '}
         <Link href="/login" className="font-semibold text-[#4F46E5] hover:text-[#4338CA] hover:underline">

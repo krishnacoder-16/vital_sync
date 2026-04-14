@@ -13,7 +13,7 @@ import {
   ChevronRight
 } from "lucide-react";
 
-export function DashboardLayout({ children, role, setRole }) {
+export function DashboardLayout({ children, role }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const patientNavItems = [
@@ -125,23 +125,6 @@ export function DashboardLayout({ children, role, setRole }) {
           </div>
 
           <div className="flex items-center gap-4 ml-8 flex-shrink-0">
-            {role && setRole && (
-              <div className="hidden sm:flex items-center bg-[#F3F4F6] p-1 rounded-xl border border-[#E5E7EB]">
-                <button 
-                  onClick={() => setRole("patient")}
-                  className={`px-4 py-1.5 text-[13px] font-semibold rounded-lg transition-all ${role === 'patient' ? 'bg-white shadow-[0_2px_8px_rgba(0,0,0,0.04)] text-[#4F46E5]' : 'text-[#6B7280] hover:text-[#111827]'}`}
-                >
-                  Patient View
-                </button>
-                <button 
-                  onClick={() => setRole("doctor")}
-                  className={`px-4 py-1.5 text-[13px] font-semibold rounded-lg transition-all ${role === 'doctor' ? 'bg-white shadow-[0_2px_8px_rgba(0,0,0,0.04)] text-[#4F46E5]' : 'text-[#6B7280] hover:text-[#111827]'}`}
-                >
-                  Doctor View
-                </button>
-              </div>
-            )}
-
             <button className="relative p-2 hover:bg-[#F9FAFB] rounded-xl transition-colors">
               <Bell size={22} className="text-[#6B7280]" />
               <span className="absolute top-1 right-1 w-2 h-2 bg-[#EF4444] rounded-full"></span>

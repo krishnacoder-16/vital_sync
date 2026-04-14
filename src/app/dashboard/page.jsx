@@ -31,13 +31,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <DashboardLayout 
-      role={role} 
-      setRole={(newRole) => {
-        setRole(newRole);
-        localStorage.setItem("vitalsync_role", newRole);
-      }}
-    >
+    <DashboardLayout role={role}>
       {role === "patient" ? <PatientDashboard userName={userName} /> : <DoctorDashboard userName={userName} />}
     </DashboardLayout>
   );

@@ -6,11 +6,13 @@ import Link from "next/link";
 import { Input } from "../../components/common/Input";
 import { Button } from "../../components/common/Button";
 import { AuthLayout } from "../../components/layout/AuthLayout";
+import { supabase } from "../../lib/supabaseClient";
 
 export default function LoginPage() {
   const router = useRouter();
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({});
+  const [authError, setAuthError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const validate = () => {
@@ -30,31 +32,37 @@ export default function LoginPage() {
     }
 
     setErrors({});
+    setAuthError("");
     setIsLoading(true);
 
-    console.log("Login Form Data:", formData);
-    
-    // Simulate setting auth context/role based on email
-    const computedRole = formData.email.toLowerCase().includes("doctor") ? "doctor" : "patient";
-    localStorage.setItem("vitalsync_role", computedRole);
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: formData.email,
+      password: formData.password,
+    });
 
-    // Extract raw name from email and remove numerical digits (e.g. abhinay12@gmail.com -> Abhinay)
-    const rawName = formData.email.split('@')[0].replace(/[0-9]/g, '');
-    const computedName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
-    localStorage.setItem("vitalsync_name", computedName || "User");
+    if (error) {
+      setAuthError(error.message);
+      setIsLoading(false);
+      return;
+    }
 
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    // Pull role and name from user metadata set during registration
+    const user = data.user;
+    const role = user.user_metadata?.role || "patient";
+    const name = user.user_metadata?.name || "";
+
+    localStorage.setItem("vitalsync_role", role);
+    localStorage.setItem("vitalsync_name", name);
 
     setIsLoading(false);
-    router.push("/dashboard"); 
+    router.push("/dashboard");
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: "" }));
-    }
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
+    if (authError) setAuthError("");
   };
 
   return (
@@ -62,7 +70,13 @@ export default function LoginPage() {
       <h2 className="text-[28px] font-bold text-[#111827] tracking-tight mb-8">
         Welcome Back
       </h2>
-      
+
+      {authError && (
+        <div className="mb-5 px-4 py-3 rounded-xl bg-[#FEF2F2] border border-[#FECACA] text-[#DC2626] text-[14px] font-medium">
+          {authError}
+        </div>
+      )}
+
       <form className="space-y-5" onSubmit={handleSubmit}>
         <Input
           label="Email"
@@ -88,7 +102,7 @@ export default function LoginPage() {
           Login
         </Button>
       </form>
-      
+
       <p className="mt-8 text-center text-[14px] text-[#6B7280]">
         Don't have an account?{' '}
         <Link href="/register" className="font-semibold text-[#4F46E5] hover:text-[#4338CA] hover:underline">

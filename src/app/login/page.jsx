@@ -7,6 +7,7 @@ import { Input } from "../../components/common/Input";
 import { Button } from "../../components/common/Button";
 import { AuthLayout } from "../../components/layout/AuthLayout";
 import { supabase } from "../../lib/supabaseClient";
+import { useAuthStore } from "../../store/authStore";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -46,13 +47,11 @@ export default function LoginPage() {
       return;
     }
 
-    // Pull role and name from user metadata set during registration
     const user = data.user;
-    const role = user.user_metadata?.role || "patient";
-    const name = user.user_metadata?.name || "";
-
-    localStorage.setItem("vitalsync_role", role);
-    localStorage.setItem("vitalsync_name", name);
+    
+    // Push directly to global session store
+    const setUser = useAuthStore.getState().setUser;
+    setUser(user);
 
     setIsLoading(false);
     router.push("/dashboard");

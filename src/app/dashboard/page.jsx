@@ -1,24 +1,25 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { DashboardLayout } from "../../components/layout/DashboardLayout";
 import { PatientDashboard } from "../../components/dashboard/PatientDashboard";
 import { DoctorDashboard } from "../../components/dashboard/DoctorDashboard";
+import { useAuthStore } from "../../store/authStore";
 
 export default function DashboardPage() {
-  const [role, setRole] = useState(null);
-  const [userName, setUserName] = useState("");
+  const router = useRouter();
+  const { user, isInitialized } = useAuthStore();
 
   useEffect(() => {
-    // Attempt to grab securely saved role from local storage mockup or fallback to patient
-    const savedRole = localStorage.getItem("vitalsync_role") || "patient";
-    const savedName = localStorage.getItem("vitalsync_name") || "Guest";
-    setRole(savedRole);
-    setUserName(savedName);
-  }, []);
+    // Restrict access purely using active global session validation
+    if (isInitialized && !user) {
+      router.push("/login");
+    }
+  }, [user, isInitialized, router]);
 
-  // Simple loading barrier while reading client state
-  if (!role) {
+  // Barrier logic protecting protected chunk hooks from firing unauth'd
+  if (!isInitialized || !user) {
     return (
       <div className="flex h-screen bg-[#F9FAFB] items-center justify-center">
         <div className="flex gap-2">
@@ -29,6 +30,9 @@ export default function DashboardPage() {
       </div>
     );
   }
+
+  const role = user.user_metadata?.role || "patient";
+  const userName = user.user_metadata?.name || user.email?.split('@')[0] || "User";
 
   return (
     <DashboardLayout role={role}>

@@ -10,11 +10,26 @@ import {
   Search,
   Bell,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  LogOut
 } from "lucide-react";
+import { useAuthStore } from "../../store/authStore";
+import { supabase } from "../../lib/supabaseClient";
+import { useRouter } from "next/navigation";
 
 export function DashboardLayout({ children, role }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const { user, clearUser } = useAuthStore();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    clearUser();
+    router.push("/login");
+  };
+
+  const displayName = user?.user_metadata?.name || user?.email || "User";
+  const initials = displayName.substring(0, 2).toUpperCase();
 
   const patientNavItems = [
     { icon: LayoutDashboard, label: "Dashboard", active: true },
@@ -129,8 +144,11 @@ export function DashboardLayout({ children, role }) {
               <Bell size={22} className="text-[#6B7280]" />
               <span className="absolute top-1 right-1 w-2 h-2 bg-[#EF4444] rounded-full"></span>
             </button>
+            <button onClick={handleLogout} className="relative p-2 hover:bg-[#FEE2E2] rounded-xl transition-colors text-[#6B7280] hover:text-[#EF4444]" title="Logout">
+              <LogOut size={22} />
+            </button>
             <div className="w-10 h-10 bg-gradient-to-br from-[#4F46E5] to-[#6366F1] rounded-full flex items-center justify-center text-white" style={{ fontSize: '14px', fontWeight: 600 }}>
-              JD
+              {initials}
             </div>
           </div>
         </div>

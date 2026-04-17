@@ -2,7 +2,7 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
 
 // Routes that should ONLY be accessible to unauthenticated users
-const AUTH_ROUTES = ['/login', '/register'];
+const AUTH_ROUTES = ['/login', '/register', '/forgot-password', '/reset-password'];
 
 // Routes that require authentication
 const PROTECTED_ROUTES = ['/dashboard'];

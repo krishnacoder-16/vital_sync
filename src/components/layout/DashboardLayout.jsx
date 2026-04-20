@@ -32,16 +32,16 @@ export function DashboardLayout({ children, role }) {
   const initials = displayName.substring(0, 2).toUpperCase();
 
   const patientNavItems = [
-    { icon: LayoutDashboard, label: "Dashboard", active: true },
-    { icon: Stethoscope, label: "Doctors", active: false },
-    { icon: Calendar, label: "Appointments", active: false },
-    { icon: User, label: "Profile", active: false },
+    { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard", active: true },
+    { icon: Stethoscope, label: "Doctors", href: "/dashboard", active: false },
+    { icon: Calendar, label: "Appointments", href: "/appointments/history", active: false },
+    { icon: User, label: "Profile", href: "/profile", active: false },
   ];
 
   const doctorNavItems = [
-    { icon: LayoutDashboard, label: "Dashboard", active: true },
-    { icon: Calendar, label: "Appointments", active: false },
-    { icon: User, label: "Profile", active: false },
+    { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard", active: true },
+    { icon: Calendar, label: "Appointments", href: "/appointments/history", active: false },
+    { icon: User, label: "Profile", href: "/profile", active: false },
   ];
 
   const navItems = role === "doctor" ? doctorNavItems : patientNavItems;
@@ -72,6 +72,7 @@ export function DashboardLayout({ children, role }) {
           {navItems.map((item, index) => (
             <motion.button
               key={item.label}
+              onClick={() => router.push(item.href)}
               initial={{ x: -10, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ delay: index * 0.1, duration: 0.4 }}

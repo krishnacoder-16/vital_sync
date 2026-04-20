@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server';
 const AUTH_ROUTES = ['/login', '/register', '/forgot-password', '/reset-password'];
 
 // Routes that require authentication
-const PROTECTED_ROUTES = ['/dashboard', '/appointments'];
+const PROTECTED_ROUTES = ['/dashboard', '/appointments', '/doctors'];
 
 export async function middleware(request) {
   const { pathname } = request.nextUrl;

@@ -15,12 +15,13 @@ import {
 } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
 import { supabase } from "../../lib/supabaseClient";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 export function DashboardLayout({ children, role }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { user, clearUser } = useAuthStore();
   const router = useRouter();
+  const pathname = usePathname();
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -31,17 +32,22 @@ export function DashboardLayout({ children, role }) {
   const displayName = user?.user_metadata?.name || user?.email || "User";
   const initials = displayName.substring(0, 2).toUpperCase();
 
+  const checkActive = (basePath) => {
+    if (basePath === "/dashboard") return pathname === "/dashboard";
+    return pathname.startsWith(basePath);
+  };
+
   const patientNavItems = [
-    { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard", active: true },
-    { icon: Stethoscope, label: "Doctors", href: "/dashboard", active: false },
-    { icon: Calendar, label: "Appointments", href: "/appointments/history", active: false },
-    { icon: User, label: "Profile", href: "/profile", active: false },
+    { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard", active: checkActive("/dashboard") },
+    { icon: Stethoscope, label: "Doctors", href: "/doctors", active: checkActive("/doctors") },
+    { icon: Calendar, label: "Appointments", href: "/appointments/history", active: checkActive("/appointments") },
+    { icon: User, label: "Profile", href: "/profile", active: checkActive("/profile") },
   ];
 
   const doctorNavItems = [
-    { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard", active: true },
-    { icon: Calendar, label: "Appointments", href: "/appointments/history", active: false },
-    { icon: User, label: "Profile", href: "/profile", active: false },
+    { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard", active: checkActive("/dashboard") },
+    { icon: Calendar, label: "Appointments", href: "/appointments/history", active: checkActive("/appointments") },
+    { icon: User, label: "Profile", href: "/profile", active: checkActive("/profile") },
   ];
 
   const navItems = role === "doctor" ? doctorNavItems : patientNavItems;

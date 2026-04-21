@@ -4,9 +4,6 @@ import { motion } from "motion/react";
 import { MapPin, Star, Stethoscope } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-/**
- * Helper: generate avatar initials from a doctor name like "Dr. Sarah Johnson" → "SJ"
- */
 function getAvatar(name) {
   const parts = (name || "").replace(/^Dr\.?\s*/i, "").trim().split(" ");
   if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
@@ -16,6 +13,7 @@ function getAvatar(name) {
 export function DoctorCard({ doctor, index = 0 }) {
   const router = useRouter();
   const avatar = doctor.avatar || getAvatar(doctor.name);
+  const isAvailable = doctor.available ?? true; // default true if profiles table has no 'available' column yet
 
   return (
     <motion.div
@@ -61,18 +59,18 @@ export function DoctorCard({ doctor, index = 0 }) {
           <div className="flex items-center gap-2 mt-2">
             <div
               className={`w-2 h-2 rounded-full ${
-                doctor.available ? "bg-[#10B981]" : "bg-[#EF4444]"
+                isAvailable ? "bg-[#10B981]" : "bg-[#EF4444]"
               }`}
             />
             <span style={{ fontSize: "13px", color: "#6B7280" }}>
-              {doctor.available ? "Available Now" : "Busy"}
+              {isAvailable ? "Available Now" : "Busy"}
             </span>
           </div>
 
           <div className="flex items-center gap-3 mt-4">
             <button
-              onClick={() => router.push(`/appointments/book?doctorId=${doctor.id}&doctorName=${encodeURIComponent(doctor.name)}&specialization=${encodeURIComponent(doctor.specialization)}`)}
-              disabled={!doctor.available}
+              onClick={() => router.push(`/appointments/book?doctorId=${doctor.id}&doctorName=${encodeURIComponent(doctor.name)}&specialization=${encodeURIComponent(doctor.specialization ?? '')}`)}
+              disabled={!isAvailable}
               className="flex-1 bg-[#4F46E5] text-white py-2.5 px-4 rounded-lg hover:bg-[#4338CA] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               style={{ fontSize: "14px", fontWeight: 600 }}
             >

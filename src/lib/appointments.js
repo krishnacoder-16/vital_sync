@@ -66,3 +66,19 @@ export async function createAppointment({
 
   return { data, error };
 }
+
+/**
+ * Update the status of an appointment.
+ * Used by doctors to confirm or cancel appointment requests.
+ * @param {string} id - The appointment UUID
+ * @param {string} status - "confirmed" | "cancelled"
+ * @returns {{ error: object|null }}
+ */
+export async function updateAppointmentStatus(id, status) {
+  const { error } = await supabase
+    .from('appointments')
+    .update({ status })
+    .eq('id', id);
+
+  return { error };
+}

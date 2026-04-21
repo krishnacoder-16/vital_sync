@@ -1,43 +1,27 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import { useAuthStore } from "../../store/authStore";
 import { DashboardLayout } from "../../components/layout/DashboardLayout";
 import { DoctorCard } from "../../components/doctor/DoctorCard";
-
-const doctors = [
-  {
-    id: 1,
-    name: "Dr. Sarah Johnson",
-    specialization: "Cardiologist",
-    location: "New York, NY",
-    rating: 4.9,
-    avatar: "SJ",
-    available: true,
-  },
-  {
-    id: 2,
-    name: "Dr. Michael Chen",
-    specialization: "Neurologist",
-    location: "San Francisco, CA",
-    rating: 4.8,
-    avatar: "MC",
-    available: true,
-  },
-  {
-    id: 3,
-    name: "Dr. Emily Martinez",
-    specialization: "Pediatrician",
-    location: "Los Angeles, CA",
-    rating: 4.9,
-    avatar: "EM",
-    available: false,
-  },
-];
+import { getDoctors } from "../../lib/doctors";
+import { Stethoscope } from "lucide-react";
 
 export default function DoctorsPage() {
   const { user } = useAuthStore();
   const role = user?.user_metadata?.role || "patient";
+  const [doctors, setDoctors] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const load = async () => {
+      const { data } = await getDoctors();
+      setDoctors(data);
+      setIsLoading(false);
+    };
+    load();
+  }, []);
 
   return (
     <DashboardLayout role={role}>
@@ -55,11 +39,33 @@ export default function DoctorsPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {doctors.map((doctor, index) => (
-            <DoctorCard key={doctor.id} doctor={doctor} index={index} />
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="flex justify-center py-20">
+            <div className="flex gap-2">
+              <div className="w-2.5 h-2.5 bg-[#4F46E5] rounded-full animate-bounce" />
+              <div className="w-2.5 h-2.5 bg-[#4F46E5] rounded-full animate-bounce" style={{ animationDelay: "0.1s" }} />
+              <div className="w-2.5 h-2.5 bg-[#4F46E5] rounded-full animate-bounce" style={{ animationDelay: "0.2s" }} />
+            </div>
+          </div>
+        ) : doctors.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <div className="w-16 h-16 bg-[#EEF2FF] rounded-full flex items-center justify-center mb-4">
+              <Stethoscope size={28} className="text-[#4F46E5]" />
+            </div>
+            <h3 style={{ fontSize: "18px", fontWeight: 600, color: "#111827" }}>
+              No doctors available
+            </h3>
+            <p className="mt-2 text-[14px] text-[#6B7280]">
+              Please check back later
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            {doctors.map((doctor, index) => (
+              <DoctorCard key={doctor.id} doctor={doctor} index={index} />
+            ))}
+          </div>
+        )}
       </motion.div>
     </DashboardLayout>
   );

@@ -6,9 +6,9 @@ import {
   CalendarDays,
   Users,
   Clock,
-  CheckCircle2,
   MapPin,
   Activity,
+  Stethoscope,
 } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
 import { getAppointmentsByDoctor } from "../../lib/appointments";
@@ -20,31 +20,30 @@ export function DoctorDashboard({ userName = "Dr. Smith" }) {
     ? userName
     : `Dr. ${userName}`;
 
-  const [schedule, setSchedule] = useState([]);
+  const doctorId = user?.id;
+
+  const [allAppointments, setAllAppointments] = useState([]);
   const [scheduleLoading, setScheduleLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || !doctorId) return;
 
     const load = async () => {
-      const { data } = await getAppointmentsByDoctor(formattedName);
-      // Filter for today's schedule inline
-      const todayString = new Date().toISOString().split("T")[0];
-      const todaysData = (data || []).filter(a => a.date === todayString);
-      setSchedule(todaysData);
+      const { data } = await getAppointmentsByDoctor(doctorId);
+      setAllAppointments(data || []);
       setScheduleLoading(false);
     };
 
     load();
 
-    // Real-time synchronization
+    // Real-time synchronization — filter by doctor_id UUID
     const channel = supabase
       .channel("appointments_doctor")
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "appointments", filter: `doctor_name=eq.${formattedName}` },
+        { event: "*", schema: "public", table: "appointments", filter: `doctor_id=eq.${doctorId}` },
         () => {
-          load(); // Re-fetch when patient books or updates an appointment
+          load();
         }
       )
       .subscribe();
@@ -52,42 +51,63 @@ export function DoctorDashboard({ userName = "Dr. Smith" }) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, formattedName]);
+  }, [user, doctorId]);
+
+  // Filter for today's schedule
+  const todayString = new Date().toISOString().split("T")[0];
+  const todaysSchedule = allAppointments.filter(a => a.date === todayString);
+
+  // Derive unique patients from all appointments
+  const uniquePatients = [];
+  const seenPatients = new Set();
+  for (const appt of allAppointments) {
+    const key = appt.patient_id || appt.patient_name;
+    if (!seenPatients.has(key)) {
+      seenPatients.add(key);
+      uniquePatients.push({
+        id: appt.patient_id,
+        name: appt.patient_name || "Patient",
+        condition: appt.specialization || "General",
+        lastVisit: getTimeAgo(appt.created_at),
+        avatar: getInitials(appt.patient_name || "P"),
+      });
+    }
+  }
+
+  // Compute available slots (14 total per day minus today's booked)
+  const totalSlots = 14;
+  const availableSlots = Math.max(0, totalSlots - todaysSchedule.length);
 
   const stats = [
     {
       label: "Appointments Today",
-      value: scheduleLoading ? "—" : schedule.length.toString(),
+      value: scheduleLoading ? "—" : todaysSchedule.length.toString(),
       icon: CalendarDays,
       color: "#4F46E5",
     },
-    { label: "Total Patients", value: "145", icon: Users, color: "#10B981" },
-    { label: "Available Slots", value: "4", icon: Clock, color: "#F59E0B" },
+    {
+      label: "Total Patients",
+      value: scheduleLoading ? "—" : uniquePatients.length.toString(),
+      icon: Users,
+      color: "#10B981",
+    },
+    {
+      label: "Available Slots",
+      value: scheduleLoading ? "—" : availableSlots.toString(),
+      icon: Clock,
+      color: "#F59E0B",
+    },
   ];
 
-  // Fallback mock schedule shown when no real data is available yet
-  const mockSchedule = [
-    { title: "Robert Fox", description: "Annual Physical Checkup", time: "09:00 AM", status: "Scheduled" },
-    { title: "Wade Warren", description: "Blood Test Review", time: "11:30 AM", status: "Completed" },
-    { title: "Esther Howard", description: "Follow-up Consultation", time: "02:00 PM", status: "Scheduled" },
-  ];
-
-  // Map real DB rows to display format; fall back to mock if none
-  const displaySchedule =
-    schedule.length > 0
-      ? schedule.map((appt) => ({
-          title: appt.patient_name || "Patient",
-          description: appt.specialization || "Consultation",
-          time: appt.time_slot,
-          status: appt.status === "pending" ? "Scheduled" : appt.status.charAt(0).toUpperCase() + appt.status.slice(1),
-        }))
-      : mockSchedule;
-
-  const myPatients = [
-    { id: 1, name: "Robert Fox", condition: "Hypertension", location: "New York, NY", lastVisit: "2 weeks ago", avatar: "RF" },
-    { id: 2, name: "Wade Warren", condition: "Diabetes Type 2", location: "Brooklyn, NY", lastVisit: "1 month ago", avatar: "WW" },
-    { id: 3, name: "Esther Howard", condition: "Asthma", location: "Queens, NY", lastVisit: "3 days ago", avatar: "EH" },
-  ];
+  // Map real DB rows to display format
+  const displaySchedule = todaysSchedule.map((appt) => ({
+    title: appt.patient_name || "Patient",
+    description: appt.specialization || "Consultation",
+    time: appt.time_slot,
+    status: appt.status === "scheduled"
+      ? "Scheduled"
+      : appt.status.charAt(0).toUpperCase() + appt.status.slice(1),
+  }));
 
   return (
     <>
@@ -141,28 +161,27 @@ export function DoctorDashboard({ userName = "Dr. Smith" }) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-12 mb-8">
-        {/* Today's Schedule — real or fallback */}
+        {/* Today's Schedule */}
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.6, duration: 0.5 }}
         >
-          <div className="flex items-center justify-between mb-6">
-            <h2 style={{ fontSize: "20px", fontWeight: 600, color: "#111827" }}>
-              Today's Schedule
-            </h2>
-            {schedule.length === 0 && !scheduleLoading && (
-              <span className="text-[12px] text-[#9CA3AF] bg-[#F3F4F6] px-2 py-1 rounded-lg">
-                Sample data
-              </span>
-            )}
-          </div>
+          <h2 className="mb-6" style={{ fontSize: "20px", fontWeight: 600, color: "#111827" }}>
+            Today's Schedule
+          </h2>
 
           {scheduleLoading ? (
             <div className="flex gap-2 py-4">
               <div className="w-2 h-2 bg-[#4F46E5] rounded-full animate-bounce" />
               <div className="w-2 h-2 bg-[#4F46E5] rounded-full animate-bounce" style={{ animationDelay: "0.1s" }} />
               <div className="w-2 h-2 bg-[#4F46E5] rounded-full animate-bounce" style={{ animationDelay: "0.2s" }} />
+            </div>
+          ) : displaySchedule.length === 0 ? (
+            <div className="bg-white rounded-xl border border-[#E5E7EB] p-6 text-center">
+              <p style={{ fontSize: "14px", color: "#6B7280" }}>
+                No appointments scheduled for today.
+              </p>
             </div>
           ) : (
             <div className="bg-white rounded-xl border border-[#E5E7EB] shadow-[0_2px_8px_rgba(0,0,0,0.04)] divide-y divide-[#E5E7EB]">
@@ -200,7 +219,7 @@ export function DoctorDashboard({ userName = "Dr. Smith" }) {
           )}
         </motion.div>
 
-        {/* My Patients — static for now */}
+        {/* My Patients — derived from real appointments */}
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -209,45 +228,76 @@ export function DoctorDashboard({ userName = "Dr. Smith" }) {
           <h2 className="mb-6" style={{ fontSize: "20px", fontWeight: 600, color: "#111827" }}>
             My Patients
           </h2>
-          <div className="flex flex-col gap-4">
-            {myPatients.map((patient) => (
-              <div
-                key={patient.id}
-                className="bg-white rounded-xl p-5 border border-[#E5E7EB] shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.08)] transition-all flex items-start gap-4"
-              >
+
+          {scheduleLoading ? (
+            <div className="flex gap-2 py-4">
+              <div className="w-2 h-2 bg-[#10B981] rounded-full animate-bounce" />
+              <div className="w-2 h-2 bg-[#10B981] rounded-full animate-bounce" style={{ animationDelay: "0.1s" }} />
+              <div className="w-2 h-2 bg-[#10B981] rounded-full animate-bounce" style={{ animationDelay: "0.2s" }} />
+            </div>
+          ) : uniquePatients.length === 0 ? (
+            <div className="bg-white rounded-xl border border-[#E5E7EB] p-6 text-center">
+              <p style={{ fontSize: "14px", color: "#6B7280" }}>
+                No patients yet.
+              </p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-4">
+              {uniquePatients.slice(0, 5).map((patient, idx) => (
                 <div
-                  className="w-12 h-12 bg-gradient-to-br from-[#10B981] to-[#047857] rounded-xl flex items-center justify-center text-white flex-shrink-0"
-                  style={{ fontSize: "15px", fontWeight: 600 }}
+                  key={patient.id || idx}
+                  className="bg-white rounded-xl p-5 border border-[#E5E7EB] shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.08)] transition-all flex items-start gap-4"
                 >
-                  {patient.avatar}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 style={{ fontSize: "16px", fontWeight: 600, color: "#111827" }}>
-                    {patient.name}
-                  </h3>
-                  <div className="flex items-center gap-2 mt-1.5">
-                    <Activity size={13} className="text-[#EF4444]" />
-                    <p style={{ fontSize: "13px", color: "#6B7280" }}>
-                      {patient.condition}
-                    </p>
+                  <div
+                    className="w-12 h-12 bg-gradient-to-br from-[#10B981] to-[#047857] rounded-xl flex items-center justify-center text-white flex-shrink-0"
+                    style={{ fontSize: "15px", fontWeight: 600 }}
+                  >
+                    {patient.avatar}
                   </div>
-                </div>
-                <div className="flex flex-col items-end gap-2 shrink-0">
-                  <div className="flex items-center gap-1.5">
-                    <MapPin size={13} className="text-[#6B7280]" />
+                  <div className="flex-1 min-w-0">
+                    <h3 style={{ fontSize: "16px", fontWeight: 600, color: "#111827" }}>
+                      {patient.name}
+                    </h3>
+                    <div className="flex items-center gap-2 mt-1.5">
+                      <Stethoscope size={13} className="text-[#6B7280]" />
+                      <p style={{ fontSize: "13px", color: "#6B7280" }}>
+                        {patient.condition}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end gap-2 shrink-0">
                     <span style={{ fontSize: "12px", color: "#6B7280" }}>
-                      {patient.location}
+                      Last booked: {patient.lastVisit}
                     </span>
                   </div>
-                  <span style={{ fontSize: "12px", color: "#6B7280" }}>
-                    Last visit: {patient.lastVisit}
-                  </span>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </motion.div>
       </div>
     </>
   );
+}
+
+/** Helper: convert ISO timestamp to "X ago" string */
+function getTimeAgo(timestamp) {
+  const now = new Date();
+  const then = new Date(timestamp);
+  const diffMs = now - then;
+  const diffMin = Math.floor(diffMs / 60000);
+  if (diffMin < 1) return "Just now";
+  if (diffMin < 60) return `${diffMin}m ago`;
+  const diffHr = Math.floor(diffMin / 60);
+  if (diffHr < 24) return `${diffHr}h ago`;
+  const diffDay = Math.floor(diffHr / 24);
+  if (diffDay === 1) return "Yesterday";
+  return `${diffDay}d ago`;
+}
+
+/** Helper: extract initials from a name */
+function getInitials(name) {
+  const parts = name.trim().split(' ');
+  if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  return parts[0].substring(0, 2).toUpperCase();
 }

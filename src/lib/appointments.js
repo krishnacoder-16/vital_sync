@@ -16,16 +16,15 @@ export async function getAppointmentsByPatient(userId) {
 }
 
 /**
- * Fetch appointments for a specific doctor.
- * Since doctors may not have dedicated user IDs currently, filter by doctorName.
- * @param {string} doctorName - Display name of the doctor
+ * Fetch all appointments for a doctor using their auth user UUID.
+ * @param {string} doctorId - The doctor's auth user UUID
  * @returns {{ data: Array, error: object|null }}
  */
-export async function getAppointmentsByDoctor(doctorName) {
+export async function getAppointmentsByDoctor(doctorId) {
   const { data, error } = await supabase
     .from('appointments')
     .select('*')
-    .eq('doctor_name', doctorName)
+    .eq('doctor_id', doctorId)
     .order('date', { ascending: true })
     .order('time_slot', { ascending: true });
 
@@ -53,8 +52,8 @@ export async function createAppointment({
       {
         patient_id: userId,
         patient_name: patientName,
-        doctor_id: doctorId,
-        doctor_name: doctorName,
+        doctor_id: doctorId,       // UUID of the doctor's auth user
+        doctor_name: doctorName,   // Display name stored for convenience
         specialization,
         date,
         time_slot: timeSlot,
@@ -62,7 +61,7 @@ export async function createAppointment({
         status: 'scheduled',
       },
     ])
-    .select()  // Return the inserted row so UI can update instantly
+    .select()
     .single();
 
   return { data, error };

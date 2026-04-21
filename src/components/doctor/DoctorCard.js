@@ -4,8 +4,18 @@ import { motion } from "motion/react";
 import { MapPin, Star, Stethoscope } from "lucide-react";
 import { useRouter } from "next/navigation";
 
+/**
+ * Helper: generate avatar initials from a doctor name like "Dr. Sarah Johnson" → "SJ"
+ */
+function getAvatar(name) {
+  const parts = (name || "").replace(/^Dr\.?\s*/i, "").trim().split(" ");
+  if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  return (parts[0] || "D").substring(0, 2).toUpperCase();
+}
+
 export function DoctorCard({ doctor, index = 0 }) {
   const router = useRouter();
+  const avatar = doctor.avatar || getAvatar(doctor.name);
 
   return (
     <motion.div
@@ -19,7 +29,7 @@ export function DoctorCard({ doctor, index = 0 }) {
           className="w-14 h-14 bg-gradient-to-br from-[#4F46E5] to-[#6366F1] rounded-xl flex items-center justify-center text-white flex-shrink-0"
           style={{ fontSize: "16px", fontWeight: 600 }}
         >
-          {doctor.avatar}
+          {avatar}
         </div>
 
         <div className="flex-1 min-w-0">

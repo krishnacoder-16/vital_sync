@@ -16,6 +16,8 @@ export default function RegisterPage() {
     password: "",
     confirmPassword: "",
     role: "patient",
+    specialization: "",
+    location: "",
   });
   const [errors, setErrors] = useState({});
   const [authError, setAuthError] = useState("");
@@ -56,13 +58,14 @@ export default function RegisterPage() {
     setSuccessMsg("");
     setIsLoading(true);
 
-    const { error } = await supabase.auth.signUp({
+    const { data: signUpData, error } = await supabase.auth.signUp({
       email: formData.email,
       password: formData.password,
       options: {
         data: {
           name: formData.name,
           role: formData.role,
+          specialization: formData.specialization || null,
         },
       },
     });
@@ -71,6 +74,18 @@ export default function RegisterPage() {
       setAuthError(error.message);
       setIsLoading(false);
       return;
+    }
+
+    // Insert profile row immediately so they appear in the system
+    if (signUpData?.user) {
+      await supabase.from('profiles').insert({
+        id: signUpData.user.id,
+        name: formData.name,
+        email: formData.email,
+        role: formData.role,
+        specialization: formData.specialization || null,
+        location: formData.location || null,
+      });
     }
 
     setIsLoading(false);
@@ -153,6 +168,38 @@ export default function RegisterPage() {
           onChange={handleChange}
           error={errors.email}
         />
+
+        {/* Specialization — only for doctors */}
+        {formData.role === 'doctor' && (
+          <div className="flex flex-col w-full">
+            <label className="text-[14px] font-medium text-[#111827] mb-2">Specialization</label>
+            <input
+              name="specialization"
+              type="text"
+              placeholder="e.g. Cardiologist, Neurologist"
+              value={formData.specialization}
+              onChange={handleChange}
+              className="w-full px-4 py-3 rounded-xl bg-[#F9FAFB] border border-[#E5E7EB] focus:border-[#4F46E5] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/20 transition-all text-[#111827]"
+              style={{ fontSize: '15px' }}
+            />
+          </div>
+        )}
+
+        {/* Location — only for doctors */}
+        {formData.role === 'doctor' && (
+          <div className="flex flex-col w-full">
+            <label className="text-[14px] font-medium text-[#111827] mb-2">Location</label>
+            <input
+              name="location"
+              type="text"
+              placeholder="e.g. New York, NY"
+              value={formData.location}
+              onChange={handleChange}
+              className="w-full px-4 py-3 rounded-xl bg-[#F9FAFB] border border-[#E5E7EB] focus:border-[#4F46E5] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/20 transition-all text-[#111827]"
+              style={{ fontSize: '15px' }}
+            />
+          </div>
+        )}
 
         <Input
           label="Password"

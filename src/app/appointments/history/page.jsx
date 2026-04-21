@@ -83,7 +83,7 @@ export default function AppointmentHistoryPage() {
             </p>
           </div>
           <button
-            onClick={() => router.push("/dashboard")}
+            onClick={() => router.push("/appointments/book")}
             className="flex items-center gap-2 bg-[#4F46E5] text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-[#4338CA] transition-colors shadow-[0_4px_12px_rgba(79,70,229,0.25)]"
             style={{ fontSize: "14px" }}
           >

@@ -11,7 +11,8 @@ import {
   Activity,
 } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
-import { getDoctorTodaySchedule } from "../../lib/appointments";
+import { getAppointmentsByDoctor } from "../../lib/appointments";
+import { supabase } from "../../lib/supabaseClient";
 
 export function DoctorDashboard({ userName = "Dr. Smith" }) {
   const { user } = useAuthStore();
@@ -24,12 +25,33 @@ export function DoctorDashboard({ userName = "Dr. Smith" }) {
 
   useEffect(() => {
     if (!user) return;
+
     const load = async () => {
-      const { data } = await getDoctorTodaySchedule(formattedName);
-      setSchedule(data);
+      const { data } = await getAppointmentsByDoctor(formattedName);
+      // Filter for today's schedule inline
+      const todayString = new Date().toISOString().split("T")[0];
+      const todaysData = (data || []).filter(a => a.date === todayString);
+      setSchedule(todaysData);
       setScheduleLoading(false);
     };
+
     load();
+
+    // Real-time synchronization
+    const channel = supabase
+      .channel("appointments_doctor")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "appointments", filter: `doctor_name=eq.${formattedName}` },
+        () => {
+          load(); // Re-fetch when patient books or updates an appointment
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user, formattedName]);
 
   const stats = [

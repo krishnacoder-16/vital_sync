@@ -11,8 +11,8 @@ const STATUS_CONFIG = {
     bg: "#F0FDF4",
     border: "#BBF7D0",
   },
-  pending: {
-    label: "Pending",
+  scheduled: {
+    label: "Scheduled",
     icon: AlertCircle,
     color: "#F59E0B",
     bg: "#FFFBEB",
@@ -28,7 +28,7 @@ const STATUS_CONFIG = {
 };
 
 export function AppointmentCard({ appointment, index = 0 }) {
-  const status = STATUS_CONFIG[appointment.status] || STATUS_CONFIG.pending;
+  const status = STATUS_CONFIG[appointment.status] || STATUS_CONFIG.scheduled;
   const StatusIcon = status.icon;
 
   return (

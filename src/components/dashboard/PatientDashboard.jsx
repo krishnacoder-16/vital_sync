@@ -13,7 +13,8 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
-import { getAppointments } from "../../lib/appointments";
+import { getAppointmentsByPatient } from "../../lib/appointments";
+import { supabase } from "../../lib/supabaseClient";
 
 export function PatientDashboard({ userName = "John" }) {
   const router = useRouter();
@@ -23,12 +24,30 @@ export function PatientDashboard({ userName = "John" }) {
 
   useEffect(() => {
     if (!user) return;
+
     const load = async () => {
-      const { data } = await getAppointments(user.id);
+      const { data } = await getAppointmentsByPatient(user.id);
       setAppointments(data);
       setApptLoading(false);
     };
+
     load();
+
+    // Real-time synchronization
+    const channel = supabase
+      .channel("appointments_patient")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "appointments", filter: `patient_id=eq.${user.id}` },
+        () => {
+          load(); // Re-fetch on any INSERT/UPDATE/DELETE for this patient
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   // Only upcoming (today or future) sorted nearest first

@@ -7,7 +7,8 @@ import { Calendar, Plus } from "lucide-react";
 import { useAuthStore } from "../../../store/authStore";
 import { DashboardLayout } from "../../../components/layout/DashboardLayout";
 import { AppointmentCard } from "../../../components/appointment/AppointmentCard";
-import { getAppointments } from "../../../lib/appointments";
+import { getAppointmentsByPatient } from "../../../lib/appointments";
+import { supabase } from "../../../lib/supabaseClient";
 
 export default function AppointmentHistoryPage() {
   const router = useRouter();
@@ -20,11 +21,11 @@ export default function AppointmentHistoryPage() {
   useEffect(() => {
     if (!user) return;
 
-    const fetchAppointments = async () => {
+    const load = async () => {
       setIsLoading(true);
       setFetchError("");
 
-      const { data, error } = await getAppointments(user.id);
+      const { data, error } = await getAppointmentsByPatient(user.id);
 
       if (error) {
         setFetchError("Failed to load appointments. Please try again.");
@@ -35,7 +36,26 @@ export default function AppointmentHistoryPage() {
       setIsLoading(false);
     };
 
-    fetchAppointments();
+    load();
+
+    // Real-time synchronization
+    const channel = supabase
+      .channel("appointments_history")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "appointments", filter: `patient_id=eq.${user.id}` },
+        () => {
+          // Re-fetch implicitly skips heavy loading UI since we just update state silently
+          getAppointmentsByPatient(user.id).then(({ data, error }) => {
+            if (!error && data) setAppointments(data);
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   const filtered =
@@ -74,7 +94,7 @@ export default function AppointmentHistoryPage() {
 
         {/* Filter Tabs */}
         <div className="flex items-center bg-[#F3F4F6] p-1 rounded-xl border border-[#E5E7EB] w-fit mb-6">
-          {["all", "pending", "confirmed", "cancelled"].map((tab) => (
+          {["all", "scheduled", "confirmed", "cancelled"].map((tab) => (
             <button
               key={tab}
               onClick={() => setFilter(tab)}

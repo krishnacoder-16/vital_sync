@@ -3,7 +3,8 @@
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "motion/react";
-import { Calendar, Clock, FileText, CheckCircle2 } from "lucide-react";
+import { Calendar, Clock, FileText } from "lucide-react";
+import toast from "react-hot-toast";
 import { useAuthStore } from "../../../store/authStore";
 import { DashboardLayout } from "../../../components/layout/DashboardLayout";
 import { createAppointment } from "../../../lib/appointments";
@@ -29,7 +30,6 @@ function BookAppointmentContent() {
   const [notes, setNotes] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const [isSuccess, setIsSuccess] = useState(false);
 
   // Minimum date = tomorrow
   const minDate = new Date();
@@ -62,54 +62,11 @@ function BookAppointmentContent() {
       return;
     }
 
-    setIsSuccess(true);
+    toast.success("Appointment booked successfully!");
+    router.push("/appointments/history");
   };
 
   const role = user?.user_metadata?.role || "patient";
-
-  if (isSuccess) {
-    return (
-      <DashboardLayout role={role}>
-        <motion.div
-          initial={{ scale: 0.95, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.4 }}
-          className="flex flex-col items-center justify-center min-h-[60vh] text-center"
-        >
-          <div className="w-20 h-20 bg-[#F0FDF4] rounded-full flex items-center justify-center mb-6">
-            <CheckCircle2 size={40} className="text-[#16A34A]" />
-          </div>
-          <h2 style={{ fontSize: "28px", fontWeight: 700, color: "#111827" }}>
-            Appointment Booked!
-          </h2>
-          <p className="mt-3 text-[#6B7280] max-w-sm">
-            Your appointment with{" "}
-            <span className="font-semibold text-[#111827]">{doctorName}</span> on{" "}
-            <span className="font-semibold text-[#111827]">
-              {new Date(selectedDate + 'T00:00:00').toLocaleDateString("en-US", {
-                weekday: "long", month: "long", day: "numeric",
-              })}
-            </span>{" "}
-            at <span className="font-semibold text-[#111827]">{selectedSlot}</span> is confirmed.
-          </p>
-          <div className="flex gap-3 mt-8">
-            <button
-              onClick={() => router.push("/appointments/history")}
-              className="px-6 py-3 bg-[#4F46E5] text-white rounded-xl font-semibold hover:bg-[#4338CA] transition-colors"
-            >
-              View My Appointments
-            </button>
-            <button
-              onClick={() => router.push("/dashboard")}
-              className="px-6 py-3 border border-[#E5E7EB] rounded-xl font-semibold text-[#111827] hover:bg-[#F9FAFB] transition-colors"
-            >
-              Back to Dashboard
-            </button>
-          </div>
-        </motion.div>
-      </DashboardLayout>
-    );
-  }
 
   return (
     <DashboardLayout role={role}>

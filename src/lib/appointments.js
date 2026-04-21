@@ -5,7 +5,7 @@ import { supabase } from './supabaseClient';
  * @param {string} userId - The authenticated user's UUID
  * @returns {{ data: Array, error: object|null }}
  */
-export async function getAppointments(userId) {
+export async function getAppointmentsByPatient(userId) {
   const { data, error } = await supabase
     .from('appointments')
     .select('*')
@@ -16,19 +16,17 @@ export async function getAppointments(userId) {
 }
 
 /**
- * Fetch appointments for today across all patients (for doctor view).
- * Since doctors are not yet stored in the DB with IDs, we filter by doctor_name.
+ * Fetch appointments for a specific doctor.
+ * Since doctors may not have dedicated user IDs currently, filter by doctorName.
  * @param {string} doctorName - Display name of the doctor
  * @returns {{ data: Array, error: object|null }}
  */
-export async function getDoctorTodaySchedule(doctorName) {
-  const today = new Date().toISOString().split('T')[0];
-
+export async function getAppointmentsByDoctor(doctorName) {
   const { data, error } = await supabase
     .from('appointments')
     .select('*')
     .eq('doctor_name', doctorName)
-    .eq('date', today)
+    .order('date', { ascending: true })
     .order('time_slot', { ascending: true });
 
   return { data: data || [], error };
@@ -61,7 +59,7 @@ export async function createAppointment({
         date,
         time_slot: timeSlot,
         notes: notes || null,
-        status: 'pending',
+        status: 'scheduled',
       },
     ])
     .select()  // Return the inserted row so UI can update instantly

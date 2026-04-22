@@ -1,7 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "motion/react";
-import { Calendar, Clock, Stethoscope, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
+import { Calendar, Clock, Stethoscope, CheckCircle2, XCircle, AlertCircle, Pencil } from "lucide-react";
 
 const STATUS_CONFIG = {
   confirmed: {
@@ -27,9 +28,22 @@ const STATUS_CONFIG = {
   },
 };
 
-export function AppointmentCard({ appointment, index = 0 }) {
+/**
+ * AppointmentCard — patient-facing read/edit/cancel card.
+ *
+ * Props:
+ *  appointment  — the appointment object
+ *  index        — for staggered animation
+ *  onEdit(appt) — called when patient clicks Edit (only for scheduled)
+ *  onCancel(id) — called when patient clicks Cancel (not for already-cancelled)
+ */
+export function AppointmentCard({ appointment, index = 0, onEdit, onCancel }) {
+  const [confirmCancel, setConfirmCancel] = useState(false);
   const status = STATUS_CONFIG[appointment.status] || STATUS_CONFIG.scheduled;
   const StatusIcon = status.icon;
+
+  const isScheduled  = appointment.status === "scheduled";
+  const isCancelled  = appointment.status === "cancelled";
 
   return (
     <motion.div
@@ -39,6 +53,7 @@ export function AppointmentCard({ appointment, index = 0 }) {
       className="bg-white rounded-xl p-5 border border-[#E5E7EB] shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.06)] transition-all"
     >
       <div className="flex items-start justify-between gap-4">
+        {/* Left: appointment info */}
         <div className="flex items-start gap-4 flex-1 min-w-0">
           <div className="w-12 h-12 bg-[#EEF2FF] rounded-xl flex items-center justify-center flex-shrink-0">
             <Stethoscope size={22} className="text-[#4F46E5]" />
@@ -56,7 +71,7 @@ export function AppointmentCard({ appointment, index = 0 }) {
               <div className="flex items-center gap-1.5">
                 <Calendar size={13} className="text-[#6B7280]" />
                 <span style={{ fontSize: "13px", color: "#6B7280" }}>
-                  {new Date(appointment.date).toLocaleDateString("en-US", {
+                  {new Date(appointment.date + "T00:00:00").toLocaleDateString("en-US", {
                     weekday: "short",
                     month: "short",
                     day: "numeric",
@@ -72,27 +87,76 @@ export function AppointmentCard({ appointment, index = 0 }) {
             </div>
 
             {appointment.notes && (
-              <p
-                className="mt-2 text-[13px] text-[#6B7280] bg-[#F9FAFB] border border-[#E5E7EB] rounded-lg px-3 py-2"
-              >
+              <p className="mt-2 text-[13px] text-[#6B7280] bg-[#F9FAFB] border border-[#E5E7EB] rounded-lg px-3 py-2">
                 {appointment.notes}
               </p>
+            )}
+
+            {/* Inline cancel confirmation */}
+            {confirmCancel && (
+              <motion.div
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-3 flex items-center gap-3 px-4 py-3 bg-[#FEF2F2] border border-[#FECACA] rounded-xl"
+              >
+                <p style={{ fontSize: "13px", color: "#B91C1C", fontWeight: 500, flex: 1 }}>
+                  Cancel this appointment?
+                </p>
+                <button
+                  onClick={() => { onCancel(appointment.id); setConfirmCancel(false); }}
+                  className="px-3 py-1.5 bg-[#EF4444] text-white rounded-lg hover:bg-[#DC2626] transition-colors"
+                  style={{ fontSize: "12px", fontWeight: 600 }}
+                >
+                  Yes, Cancel
+                </button>
+                <button
+                  onClick={() => setConfirmCancel(false)}
+                  className="px-3 py-1.5 bg-white border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB] transition-colors"
+                  style={{ fontSize: "12px", fontWeight: 600, color: "#374151" }}
+                >
+                  Keep
+                </button>
+              </motion.div>
             )}
           </div>
         </div>
 
-        {/* Status Badge */}
-        <div
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full flex-shrink-0 border"
-          style={{
-            backgroundColor: status.bg,
-            borderColor: status.border,
-          }}
-        >
-          <StatusIcon size={13} style={{ color: status.color }} />
-          <span style={{ fontSize: "12px", fontWeight: 600, color: status.color }}>
-            {status.label}
-          </span>
+        {/* Right: status badge + action buttons */}
+        <div className="flex flex-col items-end gap-2 flex-shrink-0">
+          {/* Status badge */}
+          <div
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border"
+            style={{ backgroundColor: status.bg, borderColor: status.border }}
+          >
+            <StatusIcon size={13} style={{ color: status.color }} />
+            <span style={{ fontSize: "12px", fontWeight: 600, color: status.color }}>
+              {status.label}
+            </span>
+          </div>
+
+          {/* Edit — scheduled only */}
+          {isScheduled && onEdit && !confirmCancel && (
+            <button
+              onClick={() => onEdit(appointment)}
+              className="flex items-center gap-1.5 px-3 py-1.5 border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB] transition-colors"
+              style={{ fontSize: "12px", fontWeight: 600, color: "#374151" }}
+            >
+              <Pencil size={12} />
+              Edit
+            </button>
+          )}
+
+          {/* Cancel — not for already-cancelled */}
+          {!isCancelled && onCancel && !confirmCancel && (
+            <button
+              onClick={() => setConfirmCancel(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 border border-[#FECACA] text-[#EF4444] rounded-lg hover:bg-[#FEF2F2] transition-colors"
+              style={{ fontSize: "12px", fontWeight: 600 }}
+            >
+              <XCircle size={12} />
+              Cancel
+            </button>
+          )}
         </div>
       </div>
     </motion.div>

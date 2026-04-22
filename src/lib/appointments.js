@@ -68,6 +68,36 @@ export async function createAppointment({
 }
 
 /**
+ * Update editable fields of an appointment (date, time_slot, notes).
+ * Only patients should call this on their own scheduled appointments.
+ * @param {string} id - The appointment UUID
+ * @param {{ date?: string, time_slot?: string, notes?: string }} updates
+ * @returns {{ data: object|null, error: object|null }}
+ */
+export async function updateAppointment(id, updates) {
+  const { data, error } = await supabase
+    .from('appointments')
+    .update(updates)
+    .eq('id', id)
+    .select();
+
+  if (error) {
+    console.error('[updateAppointment] DB error:', error);
+    return { data: null, error };
+  }
+
+  if (!data || data.length === 0) {
+    console.error('[updateAppointment] 0 rows updated — check RLS policy.');
+    return {
+      data: null,
+      error: { message: 'Permission denied or appointment not found.' },
+    };
+  }
+
+  return { data: data[0], error: null };
+}
+
+/**
  * Update the status of an appointment.
  * Used by doctors to confirm or cancel appointment requests.
  *

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
 import { Calendar, Plus, CheckCircle2, XCircle, Clock, User } from "lucide-react";
@@ -8,48 +8,43 @@ import toast from "react-hot-toast";
 import { useAuthStore } from "../../../store/authStore";
 import { DashboardLayout } from "../../../components/layout/DashboardLayout";
 import { AppointmentCard } from "../../../components/appointment/AppointmentCard";
-import { getAppointmentsByPatient, getAppointmentsByDoctor } from "../../../lib/appointments";
+import { getAppointmentsByPatient, getAppointmentsByDoctor, updateAppointmentStatus } from "../../../lib/appointments";
 import { supabase } from "../../../lib/supabaseClient";
 
-// ─── Doctor view: Accept / Reject an appointment ─────────────────────────────
-async function updateAppointmentStatus(id, status) {
-  const { error } = await supabase
-    .from("appointments")
-    .update({ status })
-    .eq("id", id);
-  return { error };
-}
+// ─── Status config (shared) ──────────────────────────────────────────────────
+const STATUS_COLORS = {
+  scheduled: { bg: "#FFFBEB", border: "#FDE68A", text: "#B45309", label: "Scheduled" },
+  confirmed:  { bg: "#F0FDF4", border: "#BBF7D0", text: "#15803D", label: "Confirmed"  },
+  cancelled:  { bg: "#FEF2F2", border: "#FECACA", text: "#B91C1C", label: "Cancelled"  },
+};
 
-// ─── Doctor appointment row ────────────────────────────────────────────────
+// ─── Doctor appointment row ──────────────────────────────────────────────────
+// Pure presentational — all state lives in the parent page.
+// `appointment.status` is the single source of truth; no local status state.
 function DoctorAppointmentRow({ appointment, index, onAction }) {
   const [acting, setActing] = useState(false);
-  // Optimistic local status — updates instantly before parent re-fetches
-  const [localStatus, setLocalStatus] = useState(appointment.status);
+  const s = STATUS_COLORS[appointment.status] || STATUS_COLORS.scheduled;
 
   const handleAction = async (newStatus) => {
     setActing(true);
-    setLocalStatus(newStatus); // instant badge + button update
     const { error } = await updateAppointmentStatus(appointment.id, newStatus);
     setActing(false);
+
     if (error) {
-      setLocalStatus(appointment.status); // revert on failure
-      toast.error("Failed to update appointment. Please try again.");
+      // DB write failed (or RLS blocked it) — do NOT update UI
+      toast.error(error.message || "Failed to update appointment. Please try again.");
+      return;
+    }
+
+    // DB write confirmed — now update parent state (instant tab filtering)
+    onAction(appointment.id, newStatus);
+
+    if (newStatus === "confirmed") {
+      toast.success(`Appointment confirmed for ${appointment.patient_name || "patient"}.`);
     } else {
-      if (newStatus === "confirmed") {
-        toast.success(`Appointment confirmed for ${appointment.patient_name || "patient"}.`);
-      } else {
-        toast.error(`Appointment rejected for ${appointment.patient_name || "patient"}.`);
-      }
-      onAction(appointment.id, newStatus); // bubble id + new status up to parent
+      toast.error(`Appointment rejected for ${appointment.patient_name || "patient"}.`);
     }
   };
-
-  const statusColors = {
-    scheduled: { bg: "#FFFBEB", border: "#FDE68A", text: "#B45309", label: "Scheduled" },
-    confirmed: { bg: "#F0FDF4", border: "#BBF7D0", text: "#15803D", label: "Confirmed" },
-    cancelled: { bg: "#FEF2F2", border: "#FECACA", text: "#B91C1C", label: "Cancelled" },
-  };
-  const s = statusColors[localStatus] || statusColors.scheduled;
 
   return (
     <motion.div
@@ -61,8 +56,10 @@ function DoctorAppointmentRow({ appointment, index, onAction }) {
       <div className="flex items-start justify-between gap-4">
         {/* Patient info */}
         <div className="flex items-start gap-4 flex-1 min-w-0">
-          <div className="w-12 h-12 bg-gradient-to-br from-[#10B981] to-[#047857] rounded-xl flex items-center justify-center text-white flex-shrink-0"
-            style={{ fontSize: "15px", fontWeight: 600 }}>
+          <div
+            className="w-12 h-12 bg-gradient-to-br from-[#10B981] to-[#047857] rounded-xl flex items-center justify-center text-white flex-shrink-0"
+            style={{ fontSize: "15px", fontWeight: 600 }}
+          >
             {(appointment.patient_name || "P").substring(0, 2).toUpperCase()}
           </div>
           <div className="flex-1 min-w-0">
@@ -99,9 +96,9 @@ function DoctorAppointmentRow({ appointment, index, onAction }) {
           </div>
         </div>
 
-        {/* Status badge + actions */}
+        {/* Status badge + action buttons */}
         <div className="flex flex-col items-end gap-3 flex-shrink-0">
-          {/* Status badge — reflects localStatus instantly */}
+          {/* Badge — driven by appointment.status prop (single source of truth) */}
           <span
             className="px-3 py-1 rounded-full border text-[12px] font-semibold"
             style={{ backgroundColor: s.bg, borderColor: s.border, color: s.text }}
@@ -109,8 +106,8 @@ function DoctorAppointmentRow({ appointment, index, onAction }) {
             {s.label}
           </span>
 
-          {/* Accept / Reject — only while still scheduled */}
-          {localStatus === "scheduled" && (
+          {/* Buttons visible ONLY while status is "scheduled" */}
+          {appointment.status === "scheduled" && (
             <div className="flex items-center gap-2">
               <button
                 onClick={() => handleAction("confirmed")}
@@ -138,40 +135,48 @@ function DoctorAppointmentRow({ appointment, index, onAction }) {
   );
 }
 
-// ─── Main page ─────────────────────────────────────────────────────────────
+// ─── Main page ───────────────────────────────────────────────────────────────
 export default function AppointmentHistoryPage() {
   const router = useRouter();
   const { user } = useAuthStore();
   const role = user?.user_metadata?.role || "patient";
   const isDoctor = role === "doctor";
 
+  // ── Single source of truth ──
   const [appointments, setAppointments] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [fetchError, setFetchError] = useState("");
-  const [filter, setFilter] = useState("all");
+  const [isLoading, setIsLoading]       = useState(true);
+  const [fetchError, setFetchError]     = useState("");
+  const [filter, setFilter]             = useState("all");
 
-  const load = async () => {
+  // ── Fetch from DB ──
+  const load = useCallback(async () => {
     if (!user) return;
     setFetchError("");
-
     const { data, error } = isDoctor
       ? await getAppointmentsByDoctor(user.id)
       : await getAppointmentsByPatient(user.id);
-
     if (error) {
       setFetchError("Failed to load appointments. Please try again.");
     } else {
       setAppointments(data);
     }
     setIsLoading(false);
-  };
+  }, [user, isDoctor]);
 
+  // ── Optimistic status updater — called by DoctorAppointmentRow BEFORE the DB write ──
+  // This makes tab filtering react instantly with zero latency.
+  const handleStatusUpdate = useCallback((id, newStatus) => {
+    setAppointments(prev =>
+      prev.map(a => a.id === id ? { ...a, status: newStatus } : a)
+    );
+  }, []);
+
+  // ── Initial load + real-time subscription ──
   useEffect(() => {
     if (!user) return;
     setIsLoading(true);
     load();
 
-    // Real-time channel — scoped to role
     const filterStr = isDoctor
       ? `doctor_id=eq.${user.id}`
       : `patient_id=eq.${user.id}`;
@@ -182,7 +187,7 @@ export default function AppointmentHistoryPage() {
         "postgres_changes",
         { event: "*", schema: "public", table: "appointments", filter: filterStr },
         (payload) => {
-          // For patients: show a notification when doctor changes the status
+          // Patient-side: show toast when doctor changes status
           if (!isDoctor && payload.eventType === "UPDATE") {
             const newStatus = payload.new?.status;
             const oldStatus = payload.old?.status;
@@ -194,15 +199,17 @@ export default function AppointmentHistoryPage() {
               }
             }
           }
+          // Re-fetch to stay in sync with DB (doesn't override optimistic update
+          // because the data will match anyway)
           load();
         }
       )
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [user, load, isDoctor]);
 
+  // ── Tab filtering — computed from single appointments array ──
   const filtered =
     filter === "all"
       ? appointments
@@ -215,7 +222,7 @@ export default function AppointmentHistoryPage() {
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.4 }}
       >
-        {/* Header — role-aware */}
+        {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 style={{ fontSize: "28px", fontWeight: 700, color: "#111827" }}>
@@ -227,7 +234,6 @@ export default function AppointmentHistoryPage() {
                 : "Track and manage all your appointments"}
             </p>
           </div>
-
           {/* Book New — patients only */}
           {!isDoctor && (
             <button
@@ -258,7 +264,7 @@ export default function AppointmentHistoryPage() {
           ))}
         </div>
 
-        {/* Error State */}
+        {/* Error */}
         {fetchError && (
           <div className="mb-6 px-4 py-3 rounded-xl bg-[#FEF2F2] border border-[#FECACA] text-[#DC2626] text-[14px] font-medium">
             {fetchError}
@@ -287,8 +293,6 @@ export default function AppointmentHistoryPage() {
                 ? "Patients will appear here once they book with you"
                 : "Book your first appointment from the dashboard"}
             </p>
-
-            {/* CTA — patients only */}
             {!isDoctor && (
               <button
                 onClick={() => router.push("/doctors")}
@@ -299,27 +303,17 @@ export default function AppointmentHistoryPage() {
             )}
           </div>
         ) : isDoctor ? (
-          // Doctor view — Accept/Reject rows
           <div className="flex flex-col gap-4">
             {filtered.map((appt, index) => (
               <DoctorAppointmentRow
                 key={appt.id}
                 appointment={appt}
                 index={index}
-                onAction={(id, newStatus) => {
-                  // Immediately update the parent appointments array so tab
-                  // filtering reflects the change without waiting for DB re-fetch
-                  setAppointments(prev =>
-                    prev.map(a => a.id === id ? { ...a, status: newStatus } : a)
-                  );
-                  // Background re-fetch to keep data in sync
-                  load();
-                }}
+                onAction={handleStatusUpdate}
               />
             ))}
           </div>
         ) : (
-          // Patient view — read-only cards
           <div className="flex flex-col gap-4">
             {filtered.map((appt, index) => (
               <AppointmentCard key={appt.id} appointment={appt} index={index} />

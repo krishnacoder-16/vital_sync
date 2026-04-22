@@ -70,15 +70,36 @@ export async function createAppointment({
 /**
  * Update the status of an appointment.
  * Used by doctors to confirm or cancel appointment requests.
+ *
+ * IMPORTANT: We use .select() after .update() to detect silent RLS failures.
+ * Supabase does not return an error if RLS blocks the update — it just
+ * silently updates 0 rows. Checking that data.length > 0 catches this.
+ *
  * @param {string} id - The appointment UUID
  * @param {string} status - "confirmed" | "cancelled"
- * @returns {{ error: object|null }}
+ * @returns {{ data: object|null, error: object|null }}
  */
 export async function updateAppointmentStatus(id, status) {
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('appointments')
     .update({ status })
-    .eq('id', id);
+    .eq('id', id)
+    .select();
 
-  return { error };
+  if (error) {
+    console.error('[updateAppointmentStatus] DB error:', error);
+    return { data: null, error };
+  }
+
+  // Silent RLS failure: no error but 0 rows were updated
+  if (!data || data.length === 0) {
+    console.error('[updateAppointmentStatus] 0 rows updated — check RLS policy.');
+    return {
+      data: null,
+      error: { message: 'Permission denied or appointment not found. Check Supabase RLS policy.' },
+    };
+  }
+
+  console.log('[updateAppointmentStatus] Success:', data[0]);
+  return { data: data[0], error: null };
 }

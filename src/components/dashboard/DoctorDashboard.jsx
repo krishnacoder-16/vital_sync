@@ -13,6 +13,8 @@ import {
 import { useAuthStore } from "../../store/authStore";
 import { getAppointmentsByDoctor } from "../../lib/appointments";
 import { supabase } from "../../lib/supabaseClient";
+import { AppointmentsLineChart } from "../charts/AppointmentsLineChart";
+import { StatusPieChart } from "../charts/StatusPieChart";
 
 export function DoctorDashboard({ userName = "Dr. Smith" }) {
   const { user } = useAuthStore();
@@ -159,6 +161,19 @@ export function DoctorDashboard({ userName = "Dr. Smith" }) {
           </motion.div>
         ))}
       </div>
+
+      {/* ── Charts ── */}
+      {!scheduleLoading && allAppointments.length > 0 && (
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.55, duration: 0.5 }}
+          className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-10"
+        >
+          <AppointmentsLineChart appointments={allAppointments} days={7} />
+          <StatusPieChart appointments={allAppointments} />
+        </motion.div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-12 mb-8">
         {/* Today's Schedule */}

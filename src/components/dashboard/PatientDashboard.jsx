@@ -17,6 +17,8 @@ import { getAppointmentsByPatient } from "../../lib/appointments";
 import { getDoctors, getDoctorAvatar } from "../../lib/doctors";
 import { supabase } from "../../lib/supabaseClient";
 import toast from "react-hot-toast";
+import { AppointmentsLineChart } from "../charts/AppointmentsLineChart";
+import { StatusPieChart } from "../charts/StatusPieChart";
 
 export function PatientDashboard({ userName = "John" }) {
   const router = useRouter();
@@ -166,6 +168,19 @@ export function PatientDashboard({ userName = "John" }) {
           </motion.div>
         ))}
       </div>
+
+      {/* ── Charts ── */}
+      {!apptLoading && appointments.length > 0 && (
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.55, duration: 0.5 }}
+          className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-10"
+        >
+          <AppointmentsLineChart appointments={appointments} days={7} />
+          <StatusPieChart appointments={appointments} />
+        </motion.div>
+      )}
 
       {/* My Upcoming Appointments */}
       <motion.div

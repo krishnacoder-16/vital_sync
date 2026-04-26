@@ -53,7 +53,7 @@ export default function ForgotPasswordPage() {
             Didn't receive it?{" "}
             <button
               onClick={() => setIsSubmitted(false)}
-              className="font-semibold text-[#4F46E5] hover:underline"
+              className="font-semibold text-[#0d9488] hover:underline"
             >
               Try again
             </button>
@@ -61,7 +61,7 @@ export default function ForgotPasswordPage() {
         </div>
 
         <p className="mt-8 text-center text-[14px] text-[#6B7280]">
-          <Link href="/login" className="font-semibold text-[#4F46E5] hover:text-[#4338CA] hover:underline">
+          <Link href="/login" className="font-semibold text-[#0d9488] hover:text-[#0f766e] hover:underline">
             ← Back to Login
           </Link>
         </p>
@@ -101,7 +101,7 @@ export default function ForgotPasswordPage() {
       </form>
 
       <p className="mt-8 text-center text-[14px] text-[#6B7280]">
-        <Link href="/login" className="font-semibold text-[#4F46E5] hover:text-[#4338CA] hover:underline">
+        <Link href="/login" className="font-semibold text-[#0d9488] hover:text-[#0f766e] hover:underline">
           ← Back to Login
         </Link>
       </p>

@@ -85,7 +85,7 @@ export function DoctorDashboard({ userName = "Dr. Smith" }) {
       label: "Appointments Today",
       value: scheduleLoading ? "—" : todaysSchedule.length.toString(),
       icon: CalendarDays,
-      color: "#4F46E5",
+      color: "#0d9488",
     },
     {
       label: "Total Patients",
@@ -188,9 +188,9 @@ export function DoctorDashboard({ userName = "Dr. Smith" }) {
 
           {scheduleLoading ? (
             <div className="flex gap-2 py-4">
-              <div className="w-2 h-2 bg-[#4F46E5] rounded-full animate-bounce" />
-              <div className="w-2 h-2 bg-[#4F46E5] rounded-full animate-bounce" style={{ animationDelay: "0.1s" }} />
-              <div className="w-2 h-2 bg-[#4F46E5] rounded-full animate-bounce" style={{ animationDelay: "0.2s" }} />
+              <div className="w-2 h-2 bg-[#0d9488] rounded-full animate-bounce" />
+              <div className="w-2 h-2 bg-[#0d9488] rounded-full animate-bounce" style={{ animationDelay: "0.1s" }} />
+              <div className="w-2 h-2 bg-[#0d9488] rounded-full animate-bounce" style={{ animationDelay: "0.2s" }} />
             </div>
           ) : displaySchedule.length === 0 ? (
             <div className="bg-white rounded-xl border border-[#E5E7EB] p-6 text-center">
@@ -207,9 +207,9 @@ export function DoctorDashboard({ userName = "Dr. Smith" }) {
                 >
                   <div
                     className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                    style={{ backgroundColor: "#EEF2FF" }}
+                    style={{ backgroundColor: "#f0fdfa" }}
                   >
-                    <Clock size={20} style={{ color: "#4F46E5" }} />
+                    <Clock size={20} style={{ color: "#0d9488" }} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 style={{ fontSize: "15px", fontWeight: 600, color: "#111827" }}>

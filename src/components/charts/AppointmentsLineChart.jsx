@@ -10,7 +10,7 @@ const CustomTooltip = ({ active, payload, label }) => {
   return (
     <div className="bg-white border border-[#E5E7EB] rounded-xl px-4 py-3 shadow-lg">
       <p style={{ fontSize: "12px", color: "#6B7280", marginBottom: "2px" }}>{label}</p>
-      <p style={{ fontSize: "16px", fontWeight: 700, color: "#4F46E5" }}>
+      <p style={{ fontSize: "16px", fontWeight: 700, color: "#0d9488" }}>
         {payload[0].value}{" "}
         <span style={{ fontSize: "12px", fontWeight: 400, color: "#6B7280" }}>appts</span>
       </p>
@@ -51,9 +51,9 @@ export function AppointmentsLineChart({ appointments = [], days = 7, dateField =
         </div>
         <div
           className="w-9 h-9 rounded-xl flex items-center justify-center"
-          style={{ backgroundColor: "#4F46E515" }}
+          style={{ backgroundColor: "#0d948815" }}
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4F46E5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0d9488" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
           </svg>
         </div>
@@ -83,10 +83,10 @@ export function AppointmentsLineChart({ appointments = [], days = 7, dateField =
             <Line
               type="monotone"
               dataKey="count"
-              stroke="#4F46E5"
+              stroke="#0d9488"
               strokeWidth={2.5}
-              dot={{ r: 4, fill: "#4F46E5", strokeWidth: 0 }}
-              activeDot={{ r: 6, fill: "#4F46E5", stroke: "#fff", strokeWidth: 2 }}
+              dot={{ r: 4, fill: "#0d9488", strokeWidth: 0 }}
+              activeDot={{ r: 6, fill: "#0d9488", stroke: "#fff", strokeWidth: 2 }}
             />
           </LineChart>
         </ResponsiveContainer>

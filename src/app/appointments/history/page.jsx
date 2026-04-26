@@ -67,7 +67,7 @@ function EditModal({ appointment, onSave, onClose }) {
             {/* Date picker */}
             <div>
               <label className="flex items-center gap-2 text-[14px] font-semibold text-[#111827] mb-2">
-                <Calendar size={14} className="text-[#4F46E5]" />
+                <Calendar size={14} className="text-[#0d9488]" />
                 Date
               </label>
               <input
@@ -75,7 +75,7 @@ function EditModal({ appointment, onSave, onClose }) {
                 min={minDateStr}
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-[#F9FAFB] border border-[#E5E7EB] focus:border-[#4F46E5] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/20 transition-all text-[#111827]"
+                className="w-full px-4 py-3 rounded-xl bg-[#F9FAFB] border border-[#E5E7EB] focus:border-[#0d9488] focus:outline-none focus:ring-2 focus:ring-[#0d9488]/20 transition-all text-[#111827]"
                 style={{ fontSize: "15px" }}
               />
             </div>
@@ -83,7 +83,7 @@ function EditModal({ appointment, onSave, onClose }) {
             {/* Time slot */}
             <div>
               <label className="flex items-center gap-2 text-[14px] font-semibold text-[#111827] mb-2">
-                <Clock size={14} className="text-[#4F46E5]" />
+                <Clock size={14} className="text-[#0d9488]" />
                 Time Slot
               </label>
               <div className="grid grid-cols-4 gap-2">
@@ -94,8 +94,8 @@ function EditModal({ appointment, onSave, onClose }) {
                     onClick={() => setSlot(s)}
                     className={`py-2 px-1 rounded-lg border text-[12px] font-medium transition-all ${
                       slot === s
-                        ? "bg-[#4F46E5] border-[#4F46E5] text-white shadow-[0_2px_8px_rgba(79,70,229,0.3)]"
-                        : "bg-[#F9FAFB] border-[#E5E7EB] text-[#374151] hover:border-[#4F46E5] hover:text-[#4F46E5]"
+                        ? "bg-[#0d9488] border-[#0d9488] text-white shadow-[0_2px_8px_rgba(13,148,136,0.3)]"
+                        : "bg-[#F9FAFB] border-[#E5E7EB] text-[#374151] hover:border-[#0d9488] hover:text-[#0d9488]"
                     }`}
                   >
                     {s}
@@ -107,7 +107,7 @@ function EditModal({ appointment, onSave, onClose }) {
             {/* Notes */}
             <div>
               <label className="flex items-center gap-2 text-[14px] font-semibold text-[#111827] mb-2">
-                <FileText size={14} className="text-[#4F46E5]" />
+                <FileText size={14} className="text-[#0d9488]" />
                 Notes{" "}
                 <span style={{ fontSize: "12px", fontWeight: 400, color: "#9CA3AF" }}>(optional)</span>
               </label>
@@ -116,7 +116,7 @@ function EditModal({ appointment, onSave, onClose }) {
                 onChange={(e) => setNotes(e.target.value)}
                 rows={3}
                 placeholder="Describe your symptoms or reason for visit..."
-                className="w-full px-4 py-3 rounded-xl bg-[#F9FAFB] border border-[#E5E7EB] focus:border-[#4F46E5] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/20 transition-all resize-none text-[#111827]"
+                className="w-full px-4 py-3 rounded-xl bg-[#F9FAFB] border border-[#E5E7EB] focus:border-[#0d9488] focus:outline-none focus:ring-2 focus:ring-[#0d9488]/20 transition-all resize-none text-[#111827]"
                 style={{ fontSize: "14px" }}
               />
             </div>
@@ -135,7 +135,7 @@ function EditModal({ appointment, onSave, onClose }) {
             <button
               onClick={handleSave}
               disabled={saving}
-              className="px-5 py-2.5 bg-[#4F46E5] text-white rounded-xl hover:bg-[#4338CA] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              className="px-5 py-2.5 bg-[#0d9488] text-white rounded-xl hover:bg-[#0f766e] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               style={{ fontSize: "14px", fontWeight: 600 }}
             >
               {saving ? "Saving..." : "Save Changes"}
@@ -384,7 +384,7 @@ export default function AppointmentHistoryPage() {
           {!isDoctor && (
             <button
               onClick={() => router.push("/appointments/book")}
-              className="flex items-center gap-2 bg-[#4F46E5] text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-[#4338CA] transition-colors shadow-[0_4px_12px_rgba(79,70,229,0.25)]"
+              className="flex items-center gap-2 bg-[#0d9488] text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-[#0f766e] transition-colors shadow-[0_4px_12px_rgba(13,148,136,0.25)]"
               style={{ fontSize: "14px" }}
             >
               <Plus size={16} /> Book New
@@ -400,7 +400,7 @@ export default function AppointmentHistoryPage() {
               onClick={() => setFilter(tab)}
               className={`px-4 py-1.5 rounded-lg text-[13px] font-semibold transition-all capitalize ${
                 filter === tab
-                  ? "bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)] text-[#4F46E5]"
+                  ? "bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)] text-[#0d9488]"
                   : "text-[#6B7280] hover:text-[#111827]"
               }`}
             >
@@ -420,15 +420,15 @@ export default function AppointmentHistoryPage() {
         {isLoading ? (
           <div className="flex justify-center py-20">
             <div className="flex gap-2">
-              <div className="w-2.5 h-2.5 bg-[#4F46E5] rounded-full animate-bounce" />
-              <div className="w-2.5 h-2.5 bg-[#4F46E5] rounded-full animate-bounce" style={{ animationDelay: "0.1s" }} />
-              <div className="w-2.5 h-2.5 bg-[#4F46E5] rounded-full animate-bounce" style={{ animationDelay: "0.2s" }} />
+              <div className="w-2.5 h-2.5 bg-[#0d9488] rounded-full animate-bounce" />
+              <div className="w-2.5 h-2.5 bg-[#0d9488] rounded-full animate-bounce" style={{ animationDelay: "0.1s" }} />
+              <div className="w-2.5 h-2.5 bg-[#0d9488] rounded-full animate-bounce" style={{ animationDelay: "0.2s" }} />
             </div>
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="w-16 h-16 bg-[#EEF2FF] rounded-full flex items-center justify-center mb-4">
-              <Calendar size={28} className="text-[#4F46E5]" />
+            <div className="w-16 h-16 bg-[#f0fdfa] rounded-full flex items-center justify-center mb-4">
+              <Calendar size={28} className="text-[#0d9488]" />
             </div>
             <h3 style={{ fontSize: "18px", fontWeight: 600, color: "#111827" }}>
               {isDoctor ? "No appointment requests yet" : "No appointments yet"}
@@ -441,7 +441,7 @@ export default function AppointmentHistoryPage() {
             {!isDoctor && (
               <button
                 onClick={() => router.push("/doctors")}
-                className="mt-5 px-6 py-2.5 bg-[#4F46E5] text-white rounded-xl font-semibold hover:bg-[#4338CA] transition-colors"
+                className="mt-5 px-6 py-2.5 bg-[#0d9488] text-white rounded-xl font-semibold hover:bg-[#0f766e] transition-colors"
               >
                 Find a Doctor
               </button>

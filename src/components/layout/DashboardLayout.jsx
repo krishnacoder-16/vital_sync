@@ -64,11 +64,11 @@ export function DashboardLayout({ children, role }) {
       >
         <div className={`p-6 flex items-center h-[88px] ${isCollapsed ? 'justify-center' : 'justify-start'}`}>
           {isCollapsed ? (
-             <div className="w-10 h-10 bg-gradient-to-br from-[#4F46E5] to-[#6366F1] rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-[0_2px_8px_rgba(79,70,229,0.35)]">
+             <div className="w-10 h-10 bg-gradient-to-br from-[#0d9488] to-[#0369a1] rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-[0_2px_8px_rgba(13,148,136,0.35)]">
                V
              </div>
           ) : (
-            <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#4F46E5' }}>
+            <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#0d9488' }}>
               VitalSync
             </h1>
           )}
@@ -86,12 +86,12 @@ export function DashboardLayout({ children, role }) {
                 isCollapsed ? 'justify-center' : 'gap-3 px-4'
               } ${
                 item.active
-                  ? 'bg-[#EEF2FF] text-[#4F46E5]'
+                  ? 'bg-[#f0fdfa] text-[#0d9488]'
                   : 'text-[#6B7280] hover:bg-[#F9FAFB] hover:text-[#111827]'
               }`}
             >
               {item.active && (
-                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-[#4F46E5] rounded-r-full" />
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-[#0d9488] rounded-r-full" />
               )}
               
               <item.icon size={isCollapsed ? 24 : 20} className="flex-shrink-0" />
@@ -121,7 +121,7 @@ export function DashboardLayout({ children, role }) {
             }`}
           >
             {isCollapsed ? (
-              <ChevronRight size={22} className="text-[#4F46E5] group-hover:scale-110 transition-transform" />
+              <ChevronRight size={22} className="text-[#0d9488] group-hover:scale-110 transition-transform" />
             ) : (
               <>
                 <ChevronLeft size={20} />
@@ -140,7 +140,7 @@ export function DashboardLayout({ children, role }) {
               <input
                 type="text"
                 placeholder="Search resources..."
-                className="w-full pl-12 pr-4 py-3 rounded-xl bg-[#F9FAFB] border border-transparent focus:border-[#4F46E5] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/20 transition-all text-[#111827]"
+                className="w-full pl-12 pr-4 py-3 rounded-xl bg-[#F9FAFB] border border-transparent focus:border-[#0d9488] focus:outline-none focus:ring-2 focus:ring-[#0d9488]/20 transition-all text-[#111827]"
                 style={{ fontSize: '15px' }}
               />
             </div>
@@ -154,7 +154,7 @@ export function DashboardLayout({ children, role }) {
             <button onClick={handleLogout} className="relative p-2 hover:bg-[#FEE2E2] rounded-xl transition-colors text-[#6B7280] hover:text-[#EF4444]" title="Logout">
               <LogOut size={22} />
             </button>
-            <div className="w-10 h-10 bg-gradient-to-br from-[#4F46E5] to-[#6366F1] rounded-full flex items-center justify-center text-white" style={{ fontSize: '14px', fontWeight: 600 }}>
+            <div className="w-10 h-10 bg-gradient-to-br from-[#0d9488] to-[#0369a1] rounded-full flex items-center justify-center text-white" style={{ fontSize: '14px', fontWeight: 600 }}>
               {initials}
             </div>
           </div>

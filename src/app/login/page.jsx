@@ -66,17 +66,23 @@ export default function LoginPage() {
 
   return (
     <AuthLayout>
-      <h2 className="text-[28px] font-bold text-[#111827] tracking-tight mb-8">
+      <h2
+        className="font-bold text-[#111827] tracking-tight mb-2"
+        style={{ fontSize: '26px' }}
+      >
         Welcome Back
       </h2>
+      <p className="text-[14px] text-[#6B7280] mb-7">
+        Sign in to your VitalSync account
+      </p>
 
       {authError && (
-        <div className="mb-5 px-4 py-3 rounded-xl bg-[#FEF2F2] border border-[#FECACA] text-[#DC2626] text-[14px] font-medium">
-          {authError}
+        <div className="mb-5 px-4 py-3 rounded-xl bg-[#FEF2F2] border border-[#FECACA] text-[#DC2626] text-[14px] font-medium flex items-center gap-2">
+          <span>⚠</span> {authError}
         </div>
       )}
 
-      <form className="space-y-5" onSubmit={handleSubmit}>
+      <form className="space-y-6" onSubmit={handleSubmit}>
         <Input
           label="Email"
           name="email"
@@ -87,7 +93,7 @@ export default function LoginPage() {
           error={errors.email}
         />
 
-        <div className="space-y-1">
+        <div className="space-y-2">
           <Input
             label="Password"
             name="password"
@@ -100,22 +106,51 @@ export default function LoginPage() {
           <div className="flex justify-end">
             <Link
               href="/forgot-password"
-              className="text-[13px] font-medium text-[#4F46E5] hover:text-[#4338CA] hover:underline"
+              className="text-[13px] font-semibold text-[#0d9488] hover:text-[#0f766e] transition-colors"
             >
-              Forgot password?
+              Forgot Password?
             </Link>
           </div>
         </div>
 
-        <Button type="submit" isLoading={isLoading} className="mt-4">
-          Login
-        </Button>
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="w-full py-3.5 px-4 rounded-xl font-bold text-white flex items-center justify-center gap-2 transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed mt-2"
+          style={{
+            background: 'linear-gradient(135deg, #0d9488 0%, #0369a1 100%)',
+            boxShadow: '0 4px 14px 0 rgba(13,148,136,0.39)',
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.boxShadow = '0 6px 20px rgba(13,148,136,0.5)';
+            e.currentTarget.style.transform = 'translateY(-2px)';
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.boxShadow = '0 4px 14px 0 rgba(13,148,136,0.39)';
+            e.currentTarget.style.transform = 'translateY(0)';
+          }}
+        >
+          {isLoading ? (
+            <>
+              <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+              </svg>
+              <span>Logging in...</span>
+            </>
+          ) : (
+            <span>Log In</span>
+          )}
+        </button>
       </form>
 
-      <p className="mt-8 text-center text-[14px] text-[#6B7280]">
-        Don't have an account?{' '}
-        <Link href="/register" className="font-semibold text-[#4F46E5] hover:text-[#4338CA] hover:underline">
-          Register here
+      <p className="mt-7 text-center text-[14px] text-[#6B7280]">
+        Do Not Have Account?{' '}
+        <Link
+          href="/register"
+          className="font-semibold text-[#0d9488] hover:text-[#0f766e] hover:underline transition-colors"
+        >
+          Sign Up
         </Link>
       </p>
     </AuthLayout>

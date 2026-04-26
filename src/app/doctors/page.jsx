@@ -42,15 +42,15 @@ export default function DoctorsPage() {
         {isLoading ? (
           <div className="flex justify-center py-20">
             <div className="flex gap-2">
-              <div className="w-2.5 h-2.5 bg-[#4F46E5] rounded-full animate-bounce" />
-              <div className="w-2.5 h-2.5 bg-[#4F46E5] rounded-full animate-bounce" style={{ animationDelay: "0.1s" }} />
-              <div className="w-2.5 h-2.5 bg-[#4F46E5] rounded-full animate-bounce" style={{ animationDelay: "0.2s" }} />
+              <div className="w-2.5 h-2.5 bg-[#0d9488] rounded-full animate-bounce" />
+              <div className="w-2.5 h-2.5 bg-[#0d9488] rounded-full animate-bounce" style={{ animationDelay: "0.1s" }} />
+              <div className="w-2.5 h-2.5 bg-[#0d9488] rounded-full animate-bounce" style={{ animationDelay: "0.2s" }} />
             </div>
           </div>
         ) : doctors.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="w-16 h-16 bg-[#EEF2FF] rounded-full flex items-center justify-center mb-4">
-              <Stethoscope size={28} className="text-[#4F46E5]" />
+            <div className="w-16 h-16 bg-[#f0fdfa] rounded-full flex items-center justify-center mb-4">
+              <Stethoscope size={28} className="text-[#0d9488]" />
             </div>
             <h3 style={{ fontSize: "18px", fontWeight: 600, color: "#111827" }}>
               No doctors available

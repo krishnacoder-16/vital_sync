@@ -96,7 +96,7 @@ export function PatientDashboard({ userName = "John" }) {
       label: "Upcoming Appointments",
       value: apptLoading ? "—" : upcomingAppointments.length.toString(),
       icon: Calendar,
-      color: "#4F46E5",
+      color: "#0d9488",
     },
     {
       label: "Active Doctors",
@@ -195,7 +195,7 @@ export function PatientDashboard({ userName = "John" }) {
           </h2>
           <button
             onClick={() => router.push("/appointments/history")}
-            className="text-[13px] font-semibold text-[#4F46E5] hover:underline"
+            className="text-[13px] font-semibold text-[#0d9488] hover:underline"
           >
             View all →
           </button>
@@ -203,9 +203,9 @@ export function PatientDashboard({ userName = "John" }) {
 
         {apptLoading ? (
           <div className="flex gap-2 py-4">
-            <div className="w-2 h-2 bg-[#4F46E5] rounded-full animate-bounce" />
-            <div className="w-2 h-2 bg-[#4F46E5] rounded-full animate-bounce" style={{ animationDelay: "0.1s" }} />
-            <div className="w-2 h-2 bg-[#4F46E5] rounded-full animate-bounce" style={{ animationDelay: "0.2s" }} />
+            <div className="w-2 h-2 bg-[#0d9488] rounded-full animate-bounce" />
+            <div className="w-2 h-2 bg-[#0d9488] rounded-full animate-bounce" style={{ animationDelay: "0.1s" }} />
+            <div className="w-2 h-2 bg-[#0d9488] rounded-full animate-bounce" style={{ animationDelay: "0.2s" }} />
           </div>
         ) : upcomingAppointments.length === 0 ? (
           <div className="bg-white rounded-xl border border-[#E5E7EB] p-6 text-center">
@@ -213,7 +213,7 @@ export function PatientDashboard({ userName = "John" }) {
               No upcoming appointments.{" "}
               <button
                 onClick={() => router.push("/doctors")}
-                className="text-[#4F46E5] font-semibold hover:underline"
+                className="text-[#0d9488] font-semibold hover:underline"
               >
                 Book one now
               </button>
@@ -231,9 +231,9 @@ export function PatientDashboard({ userName = "John" }) {
               >
                 <div
                   className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: "#EEF2FF" }}
+                  style={{ backgroundColor: "#f0fdfa" }}
                 >
-                  <Calendar size={20} style={{ color: "#4F46E5" }} />
+                  <Calendar size={20} style={{ color: "#0d9488" }} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 style={{ fontSize: "15px", fontWeight: 600, color: "#111827" }}>
@@ -272,7 +272,7 @@ export function PatientDashboard({ userName = "John" }) {
           </h2>
           <button
             onClick={() => router.push("/doctors")}
-            className="text-[13px] font-semibold text-[#4F46E5] hover:underline"
+            className="text-[13px] font-semibold text-[#0d9488] hover:underline"
           >
             View all →
           </button>
@@ -304,7 +304,7 @@ export function PatientDashboard({ userName = "John" }) {
                 >
                   <div className="flex items-start gap-4">
                     <div
-                      className="w-14 h-14 bg-gradient-to-br from-[#4F46E5] to-[#6366F1] rounded-xl flex items-center justify-center text-white flex-shrink-0"
+                      className="w-14 h-14 bg-gradient-to-br from-[#0d9488] to-[#0369a1] rounded-xl flex items-center justify-center text-white flex-shrink-0"
                       style={{ fontSize: "16px", fontWeight: 600 }}
                     >
                       {getDoctorAvatar(doctor.name)}
@@ -340,7 +340,7 @@ export function PatientDashboard({ userName = "John" }) {
                             )
                           }
                           disabled={!isAvailable}
-                          className="flex-1 bg-[#4F46E5] text-white py-2.5 px-4 rounded-lg hover:bg-[#4338CA] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="flex-1 bg-gradient-to-br from-[#0d9488] to-[#0369a1] text-white py-2.5 px-4 rounded-lg hover:from-[#0f766e] hover:to-[#0284c7] transition-all shadow-[0_4px_14px_0_rgba(13,148,136,0.35)] hover:shadow-[0_6px_20px_rgba(13,148,136,0.5)] hover:-translate-y-[1px] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
                           style={{ fontSize: "14px", fontWeight: 600 }}
                         >
                           Book Appointment
@@ -384,9 +384,9 @@ export function PatientDashboard({ userName = "John" }) {
 
         {apptLoading ? (
           <div className="flex gap-2 py-4">
-            <div className="w-2 h-2 bg-[#4F46E5] rounded-full animate-bounce" />
-            <div className="w-2 h-2 bg-[#4F46E5] rounded-full animate-bounce" style={{ animationDelay: "0.1s" }} />
-            <div className="w-2 h-2 bg-[#4F46E5] rounded-full animate-bounce" style={{ animationDelay: "0.2s" }} />
+            <div className="w-2 h-2 bg-[#0d9488] rounded-full animate-bounce" />
+            <div className="w-2 h-2 bg-[#0d9488] rounded-full animate-bounce" style={{ animationDelay: "0.1s" }} />
+            <div className="w-2 h-2 bg-[#0d9488] rounded-full animate-bounce" style={{ animationDelay: "0.2s" }} />
           </div>
         ) : recentActivity.length === 0 ? (
           <div className="bg-white rounded-xl border border-[#E5E7EB] p-6 text-center">
@@ -406,9 +406,9 @@ export function PatientDashboard({ userName = "John" }) {
               >
                 <div
                   className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: "#EEF2FF" }}
+                  style={{ backgroundColor: "#f0fdfa" }}
                 >
-                  <activity.icon size={20} style={{ color: "#4F46E5" }} />
+                  <activity.icon size={20} style={{ color: "#0d9488" }} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 style={{ fontSize: "15px", fontWeight: 600, color: "#111827" }}>

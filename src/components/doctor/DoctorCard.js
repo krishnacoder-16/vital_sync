@@ -24,7 +24,7 @@ export function DoctorCard({ doctor, index = 0 }) {
     >
       <div className="flex items-start gap-4">
         <div
-          className="w-14 h-14 bg-gradient-to-br from-[#4F46E5] to-[#6366F1] rounded-xl flex items-center justify-center text-white flex-shrink-0"
+          className="w-14 h-14 bg-gradient-to-br from-[#0d9488] to-[#0369a1] rounded-xl flex items-center justify-center text-white flex-shrink-0"
           style={{ fontSize: "16px", fontWeight: 600 }}
         >
           {avatar}
@@ -71,7 +71,7 @@ export function DoctorCard({ doctor, index = 0 }) {
             <button
               onClick={() => router.push(`/appointments/book?doctorId=${doctor.id}&doctorName=${encodeURIComponent(doctor.name)}&specialization=${encodeURIComponent(doctor.specialization ?? '')}`)}
               disabled={!isAvailable}
-              className="flex-1 bg-[#4F46E5] text-white py-2.5 px-4 rounded-lg hover:bg-[#4338CA] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 bg-gradient-to-br from-[#0d9488] to-[#0369a1] text-white py-2.5 px-4 rounded-lg hover:from-[#0f766e] hover:to-[#0284c7] transition-all shadow-[0_4px_14px_0_rgba(13,148,136,0.35)] hover:shadow-[0_6px_20px_rgba(13,148,136,0.5)] hover:-translate-y-[1px] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
               style={{ fontSize: "14px", fontWeight: 600 }}
             >
               Book Appointment

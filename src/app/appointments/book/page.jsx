@@ -97,8 +97,8 @@ function BookAppointmentContent() {
           {/* Date Picker */}
           <div className="bg-white rounded-xl p-6 border border-[#E5E7EB] shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 bg-[#EEF2FF] rounded-lg flex items-center justify-center">
-                <Calendar size={16} className="text-[#4F46E5]" />
+              <div className="w-8 h-8 bg-[#f0fdfa] rounded-lg flex items-center justify-center">
+                <Calendar size={16} className="text-[#0d9488]" />
               </div>
               <h3 style={{ fontSize: "16px", fontWeight: 600, color: "#111827" }}>
                 Select Date
@@ -109,7 +109,7 @@ function BookAppointmentContent() {
               min={minDateStr}
               value={selectedDate}
               onChange={(e) => { setSelectedDate(e.target.value); setError(""); }}
-              className="w-full px-4 py-3 rounded-xl bg-[#F9FAFB] border border-[#E5E7EB] focus:border-[#4F46E5] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/20 transition-all text-[#111827]"
+              className="w-full px-4 py-3 rounded-xl bg-[#F9FAFB] border border-[#E5E7EB] focus:border-[#0d9488] focus:outline-none focus:ring-2 focus:ring-[#0d9488]/20 transition-all text-[#111827]"
               style={{ fontSize: "15px" }}
             />
           </div>
@@ -117,8 +117,8 @@ function BookAppointmentContent() {
           {/* Time Slot Picker */}
           <div className="bg-white rounded-xl p-6 border border-[#E5E7EB] shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 bg-[#EEF2FF] rounded-lg flex items-center justify-center">
-                <Clock size={16} className="text-[#4F46E5]" />
+              <div className="w-8 h-8 bg-[#f0fdfa] rounded-lg flex items-center justify-center">
+                <Clock size={16} className="text-[#0d9488]" />
               </div>
               <h3 style={{ fontSize: "16px", fontWeight: 600, color: "#111827" }}>
                 Select Time Slot
@@ -132,8 +132,8 @@ function BookAppointmentContent() {
                   onClick={() => { setSelectedSlot(slot); setError(""); }}
                   className={`py-2.5 px-2 rounded-lg border text-[13px] font-medium transition-all ${
                     selectedSlot === slot
-                      ? "bg-[#4F46E5] border-[#4F46E5] text-white shadow-[0_2px_8px_rgba(79,70,229,0.3)]"
-                      : "bg-[#F9FAFB] border-[#E5E7EB] text-[#374151] hover:border-[#4F46E5] hover:text-[#4F46E5]"
+                      ? "bg-[#0d9488] border-[#0d9488] text-white shadow-[0_2px_8px_rgba(13,148,136,0.3)]"
+                      : "bg-[#F9FAFB] border-[#E5E7EB] text-[#374151] hover:border-[#0d9488] hover:text-[#0d9488]"
                   }`}
                 >
                   {slot}
@@ -145,8 +145,8 @@ function BookAppointmentContent() {
           {/* Notes */}
           <div className="bg-white rounded-xl p-6 border border-[#E5E7EB] shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 bg-[#EEF2FF] rounded-lg flex items-center justify-center">
-                <FileText size={16} className="text-[#4F46E5]" />
+              <div className="w-8 h-8 bg-[#f0fdfa] rounded-lg flex items-center justify-center">
+                <FileText size={16} className="text-[#0d9488]" />
               </div>
               <h3 style={{ fontSize: "16px", fontWeight: 600, color: "#111827" }}>
                 Notes{" "}
@@ -160,7 +160,7 @@ function BookAppointmentContent() {
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Describe your symptoms or reason for visit..."
               rows={3}
-              className="w-full px-4 py-3 rounded-xl bg-[#F9FAFB] border border-[#E5E7EB] focus:border-[#4F46E5] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/20 transition-all resize-none text-[#111827]"
+              className="w-full px-4 py-3 rounded-xl bg-[#F9FAFB] border border-[#E5E7EB] focus:border-[#0d9488] focus:outline-none focus:ring-2 focus:ring-[#0d9488]/20 transition-all resize-none text-[#111827]"
               style={{ fontSize: "14px" }}
             />
           </div>
@@ -176,7 +176,7 @@ function BookAppointmentContent() {
             <motion.div
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-[#EEF2FF] border border-[#C7D2FE] rounded-xl px-5 py-4 text-[14px] text-[#4338CA]"
+              className="bg-[#f0fdfa] border border-[#99f6e4] rounded-xl px-5 py-4 text-[14px] text-[#0f766e]"
             >
               <span className="font-semibold">Booking summary: </span>
               {doctorName} ·{" "}
@@ -190,7 +190,7 @@ function BookAppointmentContent() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-[#4F46E5] text-white py-3.5 rounded-xl font-semibold hover:bg-[#4338CA] transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-[0_4px_16px_rgba(79,70,229,0.3)]"
+            className="w-full bg-[#0d9488] text-white py-3.5 rounded-xl font-semibold hover:bg-[#0f766e] transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-[0_4px_16px_rgba(13,148,136,0.3)]"
             style={{ fontSize: "16px" }}
           >
             {isLoading ? "Booking..." : "Confirm Appointment"}
@@ -206,9 +206,9 @@ export default function BookAppointmentPage() {
     <Suspense fallback={
       <div className="flex h-screen bg-[#F9FAFB] items-center justify-center">
         <div className="flex gap-2">
-          <div className="w-2.5 h-2.5 bg-[#4F46E5] rounded-full animate-bounce"></div>
-          <div className="w-2.5 h-2.5 bg-[#4F46E5] rounded-full animate-bounce" style={{animationDelay: "0.1s"}}></div>
-          <div className="w-2.5 h-2.5 bg-[#4F46E5] rounded-full animate-bounce" style={{animationDelay: "0.2s"}}></div>
+          <div className="w-2.5 h-2.5 bg-[#0d9488] rounded-full animate-bounce"></div>
+          <div className="w-2.5 h-2.5 bg-[#0d9488] rounded-full animate-bounce" style={{animationDelay: "0.1s"}}></div>
+          <div className="w-2.5 h-2.5 bg-[#0d9488] rounded-full animate-bounce" style={{animationDelay: "0.2s"}}></div>
         </div>
       </div>
     }>

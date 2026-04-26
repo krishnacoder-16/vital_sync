@@ -55,8 +55,8 @@ export function AppointmentCard({ appointment, index = 0, onEdit, onCancel }) {
       <div className="flex items-start justify-between gap-4">
         {/* Left: appointment info */}
         <div className="flex items-start gap-4 flex-1 min-w-0">
-          <div className="w-12 h-12 bg-[#EEF2FF] rounded-xl flex items-center justify-center flex-shrink-0">
-            <Stethoscope size={22} className="text-[#4F46E5]" />
+          <div className="w-12 h-12 bg-[#f0fdfa] rounded-xl flex items-center justify-center flex-shrink-0">
+            <Stethoscope size={22} className="text-[#0d9488]" />
           </div>
 
           <div className="flex-1 min-w-0">

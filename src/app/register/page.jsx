@@ -104,33 +104,40 @@ export default function RegisterPage() {
 
   return (
     <AuthLayout>
-      <h2 className="text-[28px] font-bold text-[#111827] tracking-tight mb-8">
+      <h2
+        className="font-bold text-[#111827] tracking-tight mb-1"
+        style={{ fontSize: '26px' }}
+      >
         Create an Account
       </h2>
+      <p className="text-[14px] text-[#6B7280] mb-6">
+        Join VitalSync — smart healthcare, simplified
+      </p>
 
       {authError && (
-        <div className="mb-5 px-4 py-3 rounded-xl bg-[#FEF2F2] border border-[#FECACA] text-[#DC2626] text-[14px] font-medium">
-          {authError}
+        <div className="mb-5 px-4 py-3 rounded-xl bg-[#FEF2F2] border border-[#FECACA] text-[#DC2626] text-[14px] font-medium flex items-center gap-2">
+          <span>⚠</span> {authError}
         </div>
       )}
 
       {successMsg && (
-        <div className="mb-5 px-4 py-3 rounded-xl bg-[#F0FDF4] border border-[#BBF7D0] text-[#16A34A] text-[14px] font-medium">
-          {successMsg}
+        <div className="mb-5 px-4 py-3 rounded-xl bg-[#F0FDF4] border border-[#BBF7D0] text-[#16A34A] text-[14px] font-medium flex items-center gap-2">
+          <span>✓</span> {successMsg}
         </div>
       )}
 
       <form className="space-y-5" onSubmit={handleSubmit}>
+        {/* Role selector */}
         <div className="flex flex-col w-full">
           <label className="text-[14px] font-medium text-[#111827] mb-2">Registering as a</label>
           <div className="grid grid-cols-2 gap-3">
             <button
               type="button"
               onClick={() => setFormData(prev => ({ ...prev, role: 'patient' }))}
-              className={`border py-2.5 px-4 rounded-xl text-[15px] transition-all font-semibold ${
+              className={`border py-2.5 px-4 rounded-xl text-[14px] transition-all font-semibold shadow-sm ${
                 formData.role === 'patient'
-                  ? 'bg-[#EEF2FF] border-[#4F46E5] text-[#4F46E5]'
-                  : 'bg-[#F9FAFB] border-[#E5E7EB] text-[#6B7280]'
+                  ? 'bg-[#CCFBF1] border-[#0d9488] text-[#0d9488] ring-2 ring-[#0d9488]/20'
+                  : 'bg-white border-[#E5E7EB] text-[#6B7280] hover:border-[#D1D5DB]'
               }`}
             >
               Patient
@@ -138,10 +145,10 @@ export default function RegisterPage() {
             <button
               type="button"
               onClick={() => setFormData(prev => ({ ...prev, role: 'doctor' }))}
-              className={`border py-2.5 px-4 rounded-xl text-[15px] transition-all font-semibold ${
+              className={`border py-2.5 px-4 rounded-xl text-[14px] transition-all font-semibold shadow-sm ${
                 formData.role === 'doctor'
-                  ? 'bg-[#EEF2FF] border-[#4F46E5] text-[#4F46E5]'
-                  : 'bg-[#F9FAFB] border-[#E5E7EB] text-[#6B7280]'
+                  ? 'bg-[#CCFBF1] border-[#0d9488] text-[#0d9488] ring-2 ring-[#0d9488]/20'
+                  : 'bg-white border-[#E5E7EB] text-[#6B7280] hover:border-[#D1D5DB]'
               }`}
             >
               Doctor
@@ -179,8 +186,7 @@ export default function RegisterPage() {
               placeholder="e.g. Cardiologist, Neurologist"
               value={formData.specialization}
               onChange={handleChange}
-              className="w-full px-4 py-3 rounded-xl bg-[#F9FAFB] border border-[#E5E7EB] focus:border-[#4F46E5] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/20 transition-all text-[#111827]"
-              style={{ fontSize: '15px' }}
+              className="w-full px-4 py-3 rounded-xl bg-white border border-[#E5E7EB] shadow-sm transition-all focus:outline-none focus:ring-[3px] focus:border-[#0d9488] focus:ring-[#0d9488]/20 hover:border-[#D1D5DB] text-[15px]"
             />
           </div>
         )}
@@ -195,8 +201,7 @@ export default function RegisterPage() {
               placeholder="e.g. New York, NY"
               value={formData.location}
               onChange={handleChange}
-              className="w-full px-4 py-3 rounded-xl bg-[#F9FAFB] border border-[#E5E7EB] focus:border-[#4F46E5] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/20 transition-all text-[#111827]"
-              style={{ fontSize: '15px' }}
+              className="w-full px-4 py-3 rounded-xl bg-white border border-[#E5E7EB] shadow-sm transition-all focus:outline-none focus:ring-[3px] focus:border-[#0d9488] focus:ring-[#0d9488]/20 hover:border-[#D1D5DB] text-[15px]"
             />
           </div>
         )}
@@ -221,14 +226,43 @@ export default function RegisterPage() {
           error={errors.confirmPassword}
         />
 
-        <Button type="submit" isLoading={isLoading} className="mt-4">
-          Register
-        </Button>
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="w-full py-3.5 px-4 rounded-xl font-bold text-white flex items-center justify-center gap-2 transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed mt-4"
+          style={{
+            background: 'linear-gradient(135deg, #0d9488 0%, #0369a1 100%)',
+            boxShadow: '0 4px 14px 0 rgba(13,148,136,0.39)',
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.boxShadow = '0 6px 20px rgba(13,148,136,0.5)';
+            e.currentTarget.style.transform = 'translateY(-2px)';
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.boxShadow = '0 4px 14px 0 rgba(13,148,136,0.39)';
+            e.currentTarget.style.transform = 'translateY(0)';
+          }}
+        >
+          {isLoading ? (
+            <>
+              <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+              </svg>
+              <span>Registering...</span>
+            </>
+          ) : (
+            <span>Register</span>
+          )}
+        </button>
       </form>
 
-      <p className="mt-8 text-center text-[14px] text-[#6B7280]">
+      <p className="mt-6 text-center text-[14px] text-[#6B7280]">
         Already have an account?{' '}
-        <Link href="/login" className="font-semibold text-[#4F46E5] hover:text-[#4338CA] hover:underline">
+        <Link
+          href="/login"
+          className="font-semibold text-[#0d9488] hover:text-[#0f766e] hover:underline transition-colors"
+        >
           Log in here
         </Link>
       </p>

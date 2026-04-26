@@ -17,7 +17,7 @@ const CustomTooltip = ({ active, payload }) => {
   return (
     <div className="bg-white border border-[#E5E7EB] rounded-xl px-4 py-3 shadow-lg">
       <p style={{ fontSize: "13px", fontWeight: 600, color: "#111827" }}>{name}</p>
-      <p style={{ fontSize: "16px", fontWeight: 700, color: COLORS[name] || "#4F46E5" }}>
+      <p style={{ fontSize: "16px", fontWeight: 700, color: COLORS[name] || "#0d9488" }}>
         {value}{" "}
         <span style={{ fontSize: "12px", fontWeight: 400, color: "#6B7280" }}>
           {value === 1 ? "appt" : "appts"}
@@ -95,7 +95,7 @@ export function StatusPieChart({ appointments = [] }) {
               strokeWidth={0}
             >
               {data.map((entry) => (
-                <Cell key={entry.name} fill={COLORS[entry.name] || "#4F46E5"} />
+                <Cell key={entry.name} fill={COLORS[entry.name] || "#0d9488"} />
               ))}
             </Pie>
             <Tooltip content={<CustomTooltip />} />

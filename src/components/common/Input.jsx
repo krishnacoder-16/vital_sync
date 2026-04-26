@@ -20,11 +20,11 @@ export const Input = forwardRef(({ label, error, type = "text", className = "", 
         <input
           type={inputType}
           ref={ref}
-          className={`w-full px-4 py-2.5 rounded-xl bg-[#F9FAFB] border transition-all focus:outline-none focus:ring-2
+          className={`w-full px-4 py-3 rounded-xl bg-white border shadow-sm transition-all focus:outline-none focus:ring-[3px] text-[15px]
             ${error 
               ? 'border-[#EF4444] focus:border-[#EF4444] focus:ring-[#EF4444]/20' 
-              : 'border-[#E5E7EB] focus:border-[#4F46E5] focus:ring-[#4F46E5]/20'
-            } ${isPasswordType ? 'pr-11' : ''} ${className}
+              : 'border-[#E5E7EB] hover:border-[#D1D5DB] focus:border-[#0d9488] focus:ring-[#0d9488]/20'
+            } ${isPasswordType ? 'pr-12' : ''} ${className}
           `}
           {...props}
         />

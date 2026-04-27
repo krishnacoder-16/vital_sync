@@ -346,6 +346,7 @@ export function PatientDashboard({ userName = "John" }) {
                           Book Appointment
                         </button>
                         <button
+                          onClick={() => router.push(`/doctors/${doctor.id}`)}
                           className="px-4 py-2.5 border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB] transition-colors"
                           style={{ fontSize: "14px", fontWeight: 500, color: "#111827" }}
                         >

@@ -11,14 +11,15 @@ import {
   Bell,
   ChevronLeft,
   ChevronRight,
-  LogOut
+  LogOut,
+  Sparkles
 } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
 import { supabase } from "../../lib/supabaseClient";
 import { useRouter, usePathname } from "next/navigation";
 
 export function DashboardLayout({ children, role }) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
   const { user, clearUser } = useAuthStore();
   const router = useRouter();
   const pathname = usePathname();
@@ -39,6 +40,7 @@ export function DashboardLayout({ children, role }) {
 
   const patientNavItems = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard", active: checkActive("/dashboard") },
+    { icon: Sparkles, label: "AI Symptom Checker", href: "/ai-check", active: checkActive("/ai-check") },
     { icon: Stethoscope, label: "Doctors", href: "/doctors", active: checkActive("/doctors") },
     { icon: Calendar, label: "Appointments", href: "/appointments/history", active: checkActive("/appointments") },
     { icon: User, label: "Profile", href: "/profile", active: checkActive("/profile") },

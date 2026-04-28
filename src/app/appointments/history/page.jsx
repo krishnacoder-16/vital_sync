@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
-import { Calendar, Plus, CheckCircle2, XCircle, Clock, User, FileText } from "lucide-react";
+import { Calendar, Plus, CheckCircle2, XCircle, Clock, User, FileText, Sparkles, AlertCircle } from "lucide-react";
 import toast from "react-hot-toast";
 import { useAuthStore } from "../../../store/authStore";
 import { DashboardLayout } from "../../../components/layout/DashboardLayout";
@@ -15,6 +15,8 @@ import {
   updateAppointment,
 } from "../../../lib/appointments";
 import { supabase } from "../../../lib/supabaseClient";
+import { getHeuristicPriority } from "../../../lib/aiDoctor";
+import { DoctorInsightsPanel } from "../../../components/ai/DoctorInsightsPanel";
 
 // ─── Time slots (same as booking page) ──────────────────────────────────────
 const TIME_SLOTS = [
@@ -154,11 +156,12 @@ const STATUS_COLORS = {
   cancelled:  { bg: "#FEF2F2", border: "#FECACA", text: "#B91C1C", label: "Cancelled"  },
 };
 
-function DoctorAppointmentRow({ appointment, index, onAction }) {
+function DoctorAppointmentRow({ appointment, index, onAction, onClick }) {
   const [acting, setActing] = useState(false);
   const s = STATUS_COLORS[appointment.status] || STATUS_COLORS.scheduled;
 
-  const handleAction = async (newStatus) => {
+  const handleAction = async (newStatus, e) => {
+    e.stopPropagation();
     setActing(true);
     const { error } = await updateAppointmentStatus(appointment.id, newStatus);
     setActing(false);
@@ -179,9 +182,10 @@ function DoctorAppointmentRow({ appointment, index, onAction }) {
       initial={{ y: 10, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ delay: index * 0.07, duration: 0.35 }}
-      className="bg-white rounded-xl p-5 border border-[#E5E7EB] shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.06)] transition-all"
+      onClick={onClick}
+      className="bg-white rounded-xl flex flex-col border border-[#E5E7EB] shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_2px_12px_rgba(0,0,0,0.06)] transition-all overflow-hidden cursor-pointer group relative z-10"
     >
-      <div className="flex items-start justify-between gap-4">
+      <div className="p-5 flex items-start justify-between gap-4">
         <div className="flex items-start gap-4 flex-1 min-w-0">
           <div
             className="w-12 h-12 bg-gradient-to-br from-[#10B981] to-[#047857] rounded-xl flex items-center justify-center text-white flex-shrink-0"
@@ -222,16 +226,28 @@ function DoctorAppointmentRow({ appointment, index, onAction }) {
         </div>
 
         <div className="flex flex-col items-end gap-3 flex-shrink-0">
-          <span
-            className="px-3 py-1 rounded-full border text-[12px] font-semibold"
-            style={{ backgroundColor: s.bg, borderColor: s.border, color: s.text }}
-          >
-            {s.label}
-          </span>
+          <div className="flex items-center gap-2">
+            <span
+              className="px-3 py-1 rounded-full border text-[12px] font-semibold"
+              style={{ backgroundColor: s.bg, borderColor: s.border, color: s.text }}
+            >
+              {s.label}
+            </span>
+            {appointment.priority && (
+              <div className={`px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider flex items-center gap-1
+                ${appointment.priority === 'High' ? 'bg-[#FEF2F2] text-[#991B1B] border border-[#FECACA]' : 
+                  appointment.priority === 'Medium' ? 'bg-[#FEF3C7] text-[#92400E] border border-[#FDE68A]' : 
+                  'bg-[#ECFDF5] text-[#065F46] border border-[#A7F3D0]'}`}
+              >
+                <AlertCircle size={12} /> {appointment.priority}
+              </div>
+            )}
+          </div>
+          
           {appointment.status === "scheduled" && (
             <div className="flex items-center gap-2">
               <button
-                onClick={() => handleAction("confirmed")}
+                onClick={(e) => handleAction("confirmed", e)}
                 disabled={acting}
                 className="flex items-center gap-1.5 px-4 py-2 bg-[#10B981] text-white rounded-lg hover:bg-[#059669] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ fontSize: "13px", fontWeight: 600 }}
@@ -239,7 +255,7 @@ function DoctorAppointmentRow({ appointment, index, onAction }) {
                 <CheckCircle2 size={14} /> Accept
               </button>
               <button
-                onClick={() => handleAction("cancelled")}
+                onClick={(e) => handleAction("cancelled", e)}
                 disabled={acting}
                 className="flex items-center gap-1.5 px-4 py-2 bg-white border border-[#FECACA] text-[#EF4444] rounded-lg hover:bg-[#FEF2F2] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ fontSize: "13px", fontWeight: 600 }}
@@ -266,6 +282,16 @@ export default function AppointmentHistoryPage() {
   const [fetchError, setFetchError]     = useState("");
   const [filter, setFilter]             = useState("all");
   const [editTarget, setEditTarget]     = useState(null); // appointment being edited
+
+  // AI & Priority States for Doctor
+  const [aiData, setAiData] = useState({});
+  const [priorityFilter, setPriorityFilter] = useState("All");
+  const [prioritySort, setPrioritySort] = useState("High to Low");
+  const [selectedAppt, setSelectedAppt] = useState(null);
+
+  const handleInsightGenerated = (id, data) => {
+    setAiData(prev => ({ ...prev, [id]: data }));
+  };
 
   // ── Fetch ──
   const load = useCallback(async () => {
@@ -347,11 +373,33 @@ export default function AppointmentHistoryPage() {
     return () => { supabase.removeChannel(channel); };
   }, [user, load, isDoctor]);
 
-  // ── Tab filtering ──
-  const filtered =
-    filter === "all"
-      ? appointments
-      : appointments.filter((a) => a.status === filter);
+  // ── Filtering & Sorting ──
+  let processedAppointments = appointments;
+
+  if (filter !== "all") {
+    processedAppointments = processedAppointments.filter((a) => a.status === filter);
+  }
+
+  if (isDoctor) {
+    // Add priority to all appointments
+    processedAppointments = processedAppointments.map(appt => {
+      const priority = aiData[appt.id]?.priority || getHeuristicPriority(appt);
+      return {
+        ...appt,
+        priority,
+        priorityValue: priority === "High" ? 1 : priority === "Medium" ? 2 : 3
+      };
+    });
+
+    if (priorityFilter !== "All") {
+      processedAppointments = processedAppointments.filter(a => a.priority === priorityFilter);
+    }
+
+    processedAppointments.sort((a, b) => {
+      if (prioritySort === "High to Low") return a.priorityValue - b.priorityValue;
+      return b.priorityValue - a.priorityValue;
+    });
+  }
 
   return (
     <DashboardLayout role={role}>
@@ -391,22 +439,46 @@ export default function AppointmentHistoryPage() {
             </button>
           )}
         </div>
-
         {/* Filter tabs */}
-        <div className="flex items-center bg-[#F3F4F6] p-1 rounded-xl border border-[#E5E7EB] w-fit mb-6">
-          {["all", "scheduled", "confirmed", "cancelled"].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setFilter(tab)}
-              className={`px-4 py-1.5 rounded-lg text-[13px] font-semibold transition-all capitalize ${
-                filter === tab
-                  ? "bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)] text-[#0d9488]"
-                  : "text-[#6B7280] hover:text-[#111827]"
-              }`}
-            >
-              {tab}
-            </button>
-          ))}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <div className="flex items-center bg-[#F3F4F6] p-1 rounded-xl border border-[#E5E7EB] w-fit">
+            {["all", "scheduled", "confirmed", "cancelled"].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setFilter(tab)}
+                className={`px-4 py-1.5 rounded-lg text-[13px] font-semibold transition-all capitalize ${
+                  filter === tab
+                    ? "bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)] text-[#0d9488]"
+                    : "text-[#6B7280] hover:text-[#111827]"
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+
+          {isDoctor && !isLoading && processedAppointments.length > 0 && (
+            <div className="flex items-center gap-3">
+              <select
+                value={priorityFilter}
+                onChange={(e) => setPriorityFilter(e.target.value)}
+                className="bg-white border border-[#E5E7EB] text-[#374151] text-[13px] font-medium rounded-lg px-3 py-1.5 focus:outline-none focus:border-[#0d9488]"
+              >
+                <option value="All">All Priorities</option>
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+              </select>
+              <select
+                value={prioritySort}
+                onChange={(e) => setPrioritySort(e.target.value)}
+                className="bg-white border border-[#E5E7EB] text-[#374151] text-[13px] font-medium rounded-lg px-3 py-1.5 focus:outline-none focus:border-[#0d9488]"
+              >
+                <option value="High to Low">Sort: High to Low</option>
+                <option value="Low to High">Sort: Low to High</option>
+              </select>
+            </div>
+          )}
         </div>
 
         {/* Error */}
@@ -425,7 +497,7 @@ export default function AppointmentHistoryPage() {
               <div className="w-2.5 h-2.5 bg-[#0d9488] rounded-full animate-bounce" style={{ animationDelay: "0.2s" }} />
             </div>
           </div>
-        ) : filtered.length === 0 ? (
+        ) : processedAppointments.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="w-16 h-16 bg-[#f0fdfa] rounded-full flex items-center justify-center mb-4">
               <Calendar size={28} className="text-[#0d9488]" />
@@ -449,18 +521,19 @@ export default function AppointmentHistoryPage() {
           </div>
         ) : isDoctor ? (
           <div className="flex flex-col gap-4">
-            {filtered.map((appt, index) => (
+            {processedAppointments.map((appt, index) => (
               <DoctorAppointmentRow
                 key={appt.id}
                 appointment={appt}
                 index={index}
                 onAction={handleStatusUpdate}
+                onClick={() => setSelectedAppt(appt)}
               />
             ))}
           </div>
         ) : (
           <div className="flex flex-col gap-4">
-            {filtered.map((appt, index) => (
+            {processedAppointments.map((appt, index) => (
               <AppointmentCard
                 key={appt.id}
                 appointment={appt}
@@ -472,6 +545,16 @@ export default function AppointmentHistoryPage() {
           </div>
         )}
       </motion.div>
+      
+      {isDoctor && (
+        <DoctorInsightsPanel 
+          isOpen={!!selectedAppt}
+          onClose={() => setSelectedAppt(null)}
+          appointment={selectedAppt}
+          cachedInsight={selectedAppt ? aiData[selectedAppt.id] : null}
+          onInsightGenerated={handleInsightGenerated}
+        />
+      )}
     </DashboardLayout>
   );
 }

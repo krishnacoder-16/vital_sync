@@ -9,12 +9,17 @@ import {
   MapPin,
   Activity,
   Stethoscope,
+  Sparkles,
+  FileText,
+  AlertCircle
 } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
 import { getAppointmentsByDoctor } from "../../lib/appointments";
 import { supabase } from "../../lib/supabaseClient";
 import { AppointmentsLineChart } from "../charts/AppointmentsLineChart";
 import { StatusPieChart } from "../charts/StatusPieChart";
+import { getPatientInsights, getHeuristicPriority } from "../../lib/aiDoctor";
+import { DoctorInsightsPanel } from "../ai/DoctorInsightsPanel";
 
 export function DoctorDashboard({ userName = "Dr. Smith" }) {
   const { user } = useAuthStore();
@@ -26,6 +31,16 @@ export function DoctorDashboard({ userName = "Dr. Smith" }) {
 
   const [allAppointments, setAllAppointments] = useState([]);
   const [scheduleLoading, setScheduleLoading] = useState(true);
+  
+  // AI Insights Panel State
+  const [selectedAppt, setSelectedAppt] = useState(null);
+  const [aiData, setAiData] = useState({});
+  const [priorityFilter, setPriorityFilter] = useState("All");
+  const [prioritySort, setPrioritySort] = useState("High to Low");
+
+  const handleInsightGenerated = (id, data) => {
+    setAiData(prev => ({ ...prev, [id]: data }));
+  };
 
   useEffect(() => {
     if (!user || !doctorId) return;
@@ -101,15 +116,33 @@ export function DoctorDashboard({ userName = "Dr. Smith" }) {
     },
   ];
 
-  // Map real DB rows to display format
-  const displaySchedule = todaysSchedule.map((appt) => ({
-    title: appt.patient_name || "Patient",
-    description: appt.specialization || "Consultation",
-    time: appt.time_slot,
-    status: appt.status === "scheduled"
-      ? "Scheduled"
-      : appt.status.charAt(0).toUpperCase() + appt.status.slice(1),
-  }));
+  // Map real DB rows to display format + apply priority
+  let displaySchedule = todaysSchedule.map((appt) => {
+    const cachedPriority = aiData[appt.id]?.priority;
+    const priority = cachedPriority || getHeuristicPriority(appt);
+    return {
+      original: appt,
+      title: appt.patient_name || "Patient",
+      description: appt.specialization || "Consultation",
+      time: appt.time_slot,
+      status: appt.status === "scheduled"
+        ? "Scheduled"
+        : appt.status.charAt(0).toUpperCase() + appt.status.slice(1),
+      priority,
+      priorityValue: priority === "High" ? 1 : priority === "Medium" ? 2 : 3
+    };
+  });
+
+  // Filter
+  if (priorityFilter !== "All") {
+    displaySchedule = displaySchedule.filter(a => a.priority === priorityFilter);
+  }
+
+  // Sort
+  displaySchedule.sort((a, b) => {
+    if (prioritySort === "High to Low") return a.priorityValue - b.priorityValue;
+    return b.priorityValue - a.priorityValue;
+  });
 
   return (
     <>
@@ -182,9 +215,33 @@ export function DoctorDashboard({ userName = "Dr. Smith" }) {
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.6, duration: 0.5 }}
         >
-          <h2 className="mb-6" style={{ fontSize: "20px", fontWeight: 600, color: "#111827" }}>
-            Today's Schedule
-          </h2>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <h2 style={{ fontSize: "20px", fontWeight: 600, color: "#111827" }}>
+              Today's Schedule
+            </h2>
+            {!scheduleLoading && displaySchedule.length > 0 && (
+              <div className="flex items-center gap-3">
+                <select
+                  value={priorityFilter}
+                  onChange={(e) => setPriorityFilter(e.target.value)}
+                  className="bg-white border border-[#E5E7EB] text-[#374151] text-[13px] font-medium rounded-lg px-3 py-1.5 focus:outline-none focus:border-[#0d9488]"
+                >
+                  <option value="All">All Priorities</option>
+                  <option value="High">High</option>
+                  <option value="Medium">Medium</option>
+                  <option value="Low">Low</option>
+                </select>
+                <select
+                  value={prioritySort}
+                  onChange={(e) => setPrioritySort(e.target.value)}
+                  className="bg-white border border-[#E5E7EB] text-[#374151] text-[13px] font-medium rounded-lg px-3 py-1.5 focus:outline-none focus:border-[#0d9488]"
+                >
+                  <option value="High to Low">Sort: High to Low</option>
+                  <option value="Low to High">Sort: Low to High</option>
+                </select>
+              </div>
+            )}
+          </div>
 
           {scheduleLoading ? (
             <div className="flex gap-2 py-4">
@@ -195,15 +252,16 @@ export function DoctorDashboard({ userName = "Dr. Smith" }) {
           ) : displaySchedule.length === 0 ? (
             <div className="bg-white rounded-xl border border-[#E5E7EB] p-6 text-center">
               <p style={{ fontSize: "14px", color: "#6B7280" }}>
-                No appointments scheduled for today.
+                No appointments found.
               </p>
             </div>
           ) : (
             <div className="bg-white rounded-xl border border-[#E5E7EB] shadow-[0_2px_8px_rgba(0,0,0,0.04)] divide-y divide-[#E5E7EB]">
               {displaySchedule.map((appt, index) => (
-                <div
-                  key={index}
-                  className="p-5 hover:bg-[#F9FAFB] transition-colors flex items-start gap-4"
+                <div 
+                  key={index} 
+                  onClick={() => setSelectedAppt(appt.original)}
+                  className="p-5 hover:bg-[#F9FAFB] cursor-pointer transition-all flex items-start gap-4 relative group hover:shadow-[0_2px_12px_rgba(0,0,0,0.06)] z-10"
                 >
                   <div
                     className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
@@ -222,11 +280,20 @@ export function DoctorDashboard({ userName = "Dr. Smith" }) {
                       {appt.description}
                     </p>
                   </div>
-                  <div className="flex items-center gap-1.5 flex-shrink-0 mt-1">
-                    <Clock size={14} className="text-[#6B7280]" />
-                    <span style={{ fontSize: "13px", fontWeight: 500, color: "#111827" }}>
-                      {appt.time}
-                    </span>
+                  <div className="flex flex-col items-end gap-2 ml-auto shrink-0">
+                    <div className="flex items-center gap-1.5">
+                      <Clock size={14} className="text-[#6B7280]" />
+                      <span style={{ fontSize: "13px", fontWeight: 500, color: "#111827" }}>
+                        {appt.time}
+                      </span>
+                    </div>
+                    <div className={`px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider flex items-center gap-1
+                      ${appt.priority === 'High' ? 'bg-[#FEF2F2] text-[#991B1B] border border-[#FECACA]' : 
+                        appt.priority === 'Medium' ? 'bg-[#FEF3C7] text-[#92400E] border border-[#FDE68A]' : 
+                        'bg-[#ECFDF5] text-[#065F46] border border-[#A7F3D0]'}`}
+                    >
+                      <AlertCircle size={12} /> {appt.priority}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -291,6 +358,14 @@ export function DoctorDashboard({ userName = "Dr. Smith" }) {
           )}
         </motion.div>
       </div>
+
+      <DoctorInsightsPanel 
+        isOpen={!!selectedAppt}
+        onClose={() => setSelectedAppt(null)}
+        appointment={selectedAppt}
+        cachedInsight={selectedAppt ? aiData[selectedAppt.id] : null}
+        onInsightGenerated={handleInsightGenerated}
+      />
     </>
   );
 }

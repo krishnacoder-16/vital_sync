@@ -21,6 +21,7 @@ import toast from "react-hot-toast";
 import { AppointmentsLineChart } from "../charts/AppointmentsLineChart";
 import { StatusPieChart } from "../charts/StatusPieChart";
 import { useDashboardSearch } from "../../context/DashboardSearchContext";
+import { appointmentMatchesPatient, doctorMatchesQuery } from "../../lib/searchFilters";
 
 export function PatientDashboard({ userName = "John" }) {
   const router = useRouter();
@@ -91,27 +92,15 @@ export function PatientDashboard({ userName = "John" }) {
       today.setHours(0, 0, 0, 0);
       const isUpcoming = apptDate >= today && a.status !== 'cancelled';
       if (!isUpcoming) return false;
-      if (!q) return true;
-      return (
-        (a.doctor_name || '').toLowerCase().includes(q) ||
-        (a.specialization || '').toLowerCase().includes(q) ||
-        (a.time_slot || '').toLowerCase().includes(q)
-      );
+      return appointmentMatchesPatient(a, q);
     })
     .slice(0, 3);
 
   const filteredDoctors = q
-    ? doctors.filter(d =>
-        (d.name || '').toLowerCase().includes(q) ||
-        (d.specialization || '').toLowerCase().includes(q) ||
-        (d.location || '').toLowerCase().includes(q)
-      )
+    ? doctors.filter(d => doctorMatchesQuery(d, q))
     : doctors;
 
   const upcomingAppointments = filteredUpcoming;
-
-  // Unique doctors the patient has booked with
-  const uniqueDoctorNames = [...new Set(appointments.map(a => a.doctor_name))];
 
   const stats = [
     {
@@ -121,8 +110,8 @@ export function PatientDashboard({ userName = "John" }) {
       color: "#0d9488",
     },
     {
-      label: "Active Doctors",
-      value: apptLoading ? "—" : uniqueDoctorNames.length.toString(),
+      label: "Available Doctors",
+      value: doctorsLoading ? "—" : doctors.filter(d => d.available ?? true).length.toString(),
       icon: Stethoscope,
       color: "#10B981",
     },
@@ -322,7 +311,7 @@ export function PatientDashboard({ userName = "John" }) {
       </motion.div>
       )}
 
-      {/* Available Doctors — from Supabase */}
+      {/* Our Doctors — from Supabase */}
       {/* Hide section entirely if search is active and it has zero results (global empty state below handles it) */}
       {(!q || filteredDoctors.length > 0) && (
       <motion.div
@@ -333,7 +322,7 @@ export function PatientDashboard({ userName = "John" }) {
       >
         <div className="flex items-center justify-between mb-6">
           <h2 style={{ fontSize: "20px", fontWeight: 600, color: "#111827" }}>
-            Available Doctors
+            Our Doctors
             {q && (
               <span className="ml-2 text-[15px] font-normal text-[#6B7280]">({filteredDoctors.length})</span>
             )}

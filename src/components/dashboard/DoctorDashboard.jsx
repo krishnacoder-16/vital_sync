@@ -23,6 +23,7 @@ import { getPatientInsights, getHeuristicPriority } from "../../lib/aiDoctor";
 import { DoctorInsightsPanel } from "../ai/DoctorInsightsPanel";
 import { useDashboardSearch } from "../../context/DashboardSearchContext";
 import { getDoctorById } from "../../lib/doctors";
+import { appointmentMatchesDoctor, patientMatchesQuery } from "../../lib/searchFilters";
 
 export function DoctorDashboard({ userName = "Dr. Smith" }) {
   const { user } = useAuthStore();
@@ -150,11 +151,7 @@ export function DoctorDashboard({ userName = "Dr. Smith" }) {
   const query = searchQuery;
   const q = query.toLowerCase().trim();
   if (q) {
-    displaySchedule = displaySchedule.filter(a =>
-      a.title.toLowerCase().includes(q) ||
-      a.description.toLowerCase().includes(q) ||
-      (a.time || "").toLowerCase().includes(q)
-    );
+    displaySchedule = displaySchedule.filter(a => appointmentMatchesDoctor(a, q));
   }
 
   // Filter by priority
@@ -170,10 +167,7 @@ export function DoctorDashboard({ userName = "Dr. Smith" }) {
 
   // Filter patients by search
   const filteredPatients = q
-    ? uniquePatients.filter(p =>
-        p.name.toLowerCase().includes(q) ||
-        p.condition.toLowerCase().includes(q)
-      )
+    ? uniquePatients.filter(p => patientMatchesQuery(p, q))
     : uniquePatients;
 
   return (

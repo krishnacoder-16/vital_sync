@@ -13,8 +13,6 @@ export async function POST(req) {
     }
 
     if (!process.env.GEMINI_API_KEY) {
-      // Return a simulated response if no API key is provided
-      // so the UI doesn't break, but the developer knows they need to add one.
       console.warn("GEMINI_API_KEY is not set. Returning a mocked AI response.");
       
       let mockSpecialization = "General Physician";

@@ -58,13 +58,13 @@ export function DoctorInsightsPanel({ isOpen, onClose, appointment, cachedInsigh
             className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm"
           />
 
-          {/* Side Panel */}
+          {/* Side Panel / Full Screen Modal on Mobile */}
           <motion.div
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="fixed inset-y-0 right-0 z-50 w-full max-w-md bg-[#F9FAFB] shadow-2xl flex flex-col border-l border-[#E5E7EB]"
+            className="fixed inset-0 sm:inset-y-0 sm:left-auto sm:right-0 z-50 w-full sm:max-w-md bg-[#F9FAFB] shadow-2xl flex flex-col sm:border-l sm:border-[#E5E7EB]"
           >
             {/* Header */}
             <div className="bg-white px-6 py-5 border-b border-[#E5E7EB] flex items-center justify-between shadow-sm z-10">

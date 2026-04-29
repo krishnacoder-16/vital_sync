@@ -13,7 +13,7 @@ export const AuthLayout = ({ children }) => {
     >
       {/* Outer card container */}
       <div 
-        className="flex w-full max-w-[900px] min-h-[540px] rounded-3xl shadow-[0_25px_50px_-12px_rgba(0,0,0,0.15)] overflow-hidden bg-white/80 backdrop-blur-xl border border-white/40"
+        className="flex flex-col md:flex-row w-full max-w-md md:max-w-[900px] min-h-[540px] rounded-3xl shadow-[0_25px_50px_-12px_rgba(0,0,0,0.15)] overflow-hidden bg-white/80 backdrop-blur-xl border border-white/40"
         style={{ animation: 'fadeIn 0.6s ease-out forwards' }}
       >
         <style>{`
@@ -25,7 +25,7 @@ export const AuthLayout = ({ children }) => {
 
         {/* ─── LEFT PANEL ─── */}
         <div
-          className="hidden lg:flex relative w-[45%] flex-col justify-between overflow-hidden"
+          className="hidden md:flex relative w-1/2 flex-col justify-between overflow-hidden"
           style={{
             background: 'linear-gradient(135deg, #0d9488 0%, #0369a1 100%)',
           }}
@@ -71,7 +71,7 @@ export const AuthLayout = ({ children }) => {
         </div>
 
         {/* ─── RIGHT PANEL ─── */}
-        <div className="flex-1 flex flex-col justify-center bg-transparent px-8 py-8 sm:px-12 relative">
+        <div className="flex-1 w-full md:w-1/2 flex flex-col justify-center bg-transparent px-6 py-10 sm:px-12 relative">
           {/* Logo / Branding */}
           <div className="flex items-baseline gap-1 mb-6 mt-2">
             <span className="font-black text-[24px] text-[#0d9488] tracking-tight">

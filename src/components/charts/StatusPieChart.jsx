@@ -57,7 +57,7 @@ export function StatusPieChart({ appointments = [] }) {
   const total = data.reduce((s, d) => s + d.value, 0);
 
   return (
-    <div className="bg-white rounded-xl p-6 border border-[#E5E7EB] shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+    <div className="bg-white rounded-xl p-4 sm:p-6 border border-[#E5E7EB] shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
       <div className="flex items-center justify-between mb-2">
         <div>
           <h3 style={{ fontSize: "16px", fontWeight: 600, color: "#111827" }}>

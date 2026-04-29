@@ -1,7 +1,7 @@
 "use client";
 
-import { motion } from "motion/react";
-import { useState } from "react";
+import { motion, AnimatePresence } from "motion/react";
+import { useState, useEffect } from "react";
 import {
   LayoutDashboard,
   Stethoscope,
@@ -12,7 +12,9 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
-  Sparkles
+  Sparkles,
+  Menu,
+  X
 } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
 import { supabase } from "../../lib/supabaseClient";
@@ -20,9 +22,15 @@ import { useRouter, usePathname } from "next/navigation";
 
 export function DashboardLayout({ children, role }) {
   const [isCollapsed, setIsCollapsed] = useState(true);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
   const { user, clearUser } = useAuthStore();
   const router = useRouter();
   const pathname = usePathname();
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setIsMobileOpen(false);
+  }, [pathname]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -55,25 +63,45 @@ export function DashboardLayout({ children, role }) {
   const navItems = role === "doctor" ? doctorNavItems : patientNavItems;
 
   return (
-    <div className="flex h-screen bg-[#F9FAFB]">
+    <div className="flex h-screen bg-[#F9FAFB] overflow-hidden">
+      {/* Mobile Backdrop */}
+      <AnimatePresence>
+        {isMobileOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsMobileOpen(false)}
+            className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm lg:hidden"
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Sidebar */}
       <motion.div
-        initial={{ x: -20, opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
-        transition={{ duration: 0.5 }}
-        className={`bg-white border-r border-[#E5E7EB] flex flex-col transition-all duration-300 flex-shrink-0 z-20 ${
-          isCollapsed ? 'w-[88px]' : 'w-60'
-        }`}
+        className={`fixed lg:relative top-0 left-0 h-full z-50 bg-white border-r border-[#E5E7EB] flex flex-col flex-shrink-0 transform transition-transform duration-300
+          w-64 ${isCollapsed ? 'lg:w-[88px]' : 'lg:w-64'}
+          ${isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        `}
       >
-        <div className={`p-6 flex items-center h-[88px] ${isCollapsed ? 'justify-center' : 'justify-start'}`}>
-          {isCollapsed ? (
-             <div className="w-10 h-10 bg-gradient-to-br from-[#0d9488] to-[#0369a1] rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-[0_2px_8px_rgba(13,148,136,0.35)]">
-               V
-             </div>
-          ) : (
+        <div className={`p-6 flex items-center h-[88px] ${isCollapsed ? 'justify-between lg:justify-center' : 'justify-between'}`}>
+          {/* Small V Logo - Only visible on desktop when collapsed */}
+          <div className={`w-10 h-10 bg-gradient-to-br from-[#0d9488] to-[#0369a1] rounded-xl items-center justify-center text-white font-bold text-xl shadow-[0_2px_8px_rgba(13,148,136,0.35)] ${isCollapsed ? 'hidden lg:flex' : 'hidden'}`}>
+             V
+          </div>
+          
+          {/* Full Logo - Visible on mobile ALWAYS, and on desktop when NOT collapsed */}
+          <div className={`items-center w-full justify-between ${isCollapsed ? 'flex lg:hidden' : 'flex'}`}>
             <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#0d9488' }}>
               VitalSync
             </h1>
-          )}
+            <button 
+              onClick={() => setIsMobileOpen(false)}
+              className="lg:hidden p-2 -mr-2 rounded-lg text-[#6B7280] hover:bg-[#F3F4F6]"
+            >
+              <X size={20} />
+            </button>
+          </div>
         </div>
 
         <nav className="flex-1 px-3 mt-2 flex flex-col gap-1">
@@ -84,8 +112,8 @@ export function DashboardLayout({ children, role }) {
               initial={{ x: -10, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ delay: index * 0.1, duration: 0.4 }}
-              className={`w-full flex items-center py-3 rounded-xl transition-all relative group ${
-                isCollapsed ? 'justify-center' : 'gap-3 px-4'
+              className={`w-full flex items-center py-3 rounded-xl transition-all relative group px-4 ${
+                isCollapsed ? 'gap-3 lg:gap-0 lg:justify-center' : 'gap-3'
               } ${
                 item.active
                   ? 'bg-[#f0fdfa] text-[#0d9488]'
@@ -96,17 +124,15 @@ export function DashboardLayout({ children, role }) {
                 <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-[#0d9488] rounded-r-full" />
               )}
               
-              <item.icon size={isCollapsed ? 24 : 20} className="flex-shrink-0" />
+              <item.icon className={`flex-shrink-0 ${isCollapsed ? 'w-5 h-5 lg:w-6 lg:h-6' : 'w-5 h-5'}`} />
               
-              {!isCollapsed && (
-                <span style={{ fontSize: '15px', fontWeight: 500 }} className="whitespace-nowrap transition-opacity">
-                  {item.label}
-                </span>
-              )}
+              <span style={{ fontSize: '15px', fontWeight: 500 }} className={`whitespace-nowrap transition-opacity ${isCollapsed ? 'block lg:hidden' : 'block'}`}>
+                {item.label}
+              </span>
 
               {/* Tooltip for collapsed state */}
               {isCollapsed && (
-                <div className="absolute left-[70px] px-3 py-2 bg-[#111827] text-white text-[13px] font-medium rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50 shadow-xl pointer-events-none">
+                <div className="absolute left-[70px] px-3 py-2 bg-[#111827] text-white text-[13px] font-medium rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50 shadow-xl pointer-events-none hidden lg:block">
                   {item.label}
                 </div>
               )}
@@ -115,7 +141,7 @@ export function DashboardLayout({ children, role }) {
         </nav>
 
         {/* Sidebar Collapse Toggle */}
-        <div className="p-4 border-t border-[#E5E7EB]">
+        <div className="p-4 border-t border-[#E5E7EB] hidden lg:block">
           <button 
             onClick={() => setIsCollapsed(!isCollapsed)}
             className={`flex items-center w-full py-3 rounded-xl text-[#6B7280] hover:bg-[#F9FAFB] hover:text-[#111827] transition-all ${
@@ -135,9 +161,16 @@ export function DashboardLayout({ children, role }) {
       </motion.div>
 
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
-        <div className="bg-white border-b border-[#E5E7EB] px-8 py-4 flex items-center justify-between z-10 sticky top-0">
-          <div className="flex-1 max-w-xl">
-            <div className="relative">
+        <div className="bg-white border-b border-[#E5E7EB] px-4 lg:px-8 py-4 flex items-center justify-between z-10 sticky top-0">
+          <div className="flex items-center gap-4 flex-1">
+            <button 
+              onClick={() => setIsMobileOpen(true)}
+              className="lg:hidden p-2 -ml-2 rounded-lg text-[#6B7280] hover:bg-[#F3F4F6]"
+            >
+              <Menu size={24} />
+            </button>
+            <div className="flex-1 max-w-xl hidden sm:block">
+              <div className="relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#6B7280]" size={20} />
               <input
                 type="text"
@@ -145,10 +178,11 @@ export function DashboardLayout({ children, role }) {
                 className="w-full pl-12 pr-4 py-3 rounded-xl bg-[#F9FAFB] border border-transparent focus:border-[#0d9488] focus:outline-none focus:ring-2 focus:ring-[#0d9488]/20 transition-all text-[#111827]"
                 style={{ fontSize: '15px' }}
               />
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-4 ml-8 flex-shrink-0">
+          <div className="flex items-center gap-3 sm:gap-4 ml-4 sm:ml-8 flex-shrink-0">
             <button className="relative p-2 hover:bg-[#F9FAFB] rounded-xl transition-colors">
               <Bell size={22} className="text-[#6B7280]" />
               <span className="absolute top-1 right-1 w-2 h-2 bg-[#EF4444] rounded-full"></span>
@@ -162,7 +196,7 @@ export function DashboardLayout({ children, role }) {
           </div>
         </div>
 
-        <div className="flex-1 p-8 overflow-auto">
+        <div className="flex-1 p-4 md:p-8 overflow-auto w-full relative">
           {children}
         </div>
       </div>

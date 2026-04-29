@@ -142,7 +142,7 @@ export function PatientDashboard({ userName = "John" }) {
       </motion.div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-6 mt-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
         {stats.map((stat, index) => (
           <motion.div
             key={stat.label}
@@ -291,7 +291,7 @@ export function PatientDashboard({ userName = "John" }) {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             {doctors.slice(0, 4).map((doctor, index) => {
               const isAvailable = doctor.available ?? true;
               return (

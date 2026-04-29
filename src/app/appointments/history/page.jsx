@@ -185,8 +185,8 @@ function DoctorAppointmentRow({ appointment, index, onAction, onClick }) {
       onClick={onClick}
       className="bg-white rounded-xl flex flex-col border border-[#E5E7EB] shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_2px_12px_rgba(0,0,0,0.06)] transition-all overflow-hidden cursor-pointer group relative z-10"
     >
-      <div className="p-5 flex items-start justify-between gap-4">
-        <div className="flex items-start gap-4 flex-1 min-w-0">
+      <div className="p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:justify-between gap-4">
+        <div className="flex items-start gap-3 sm:gap-4 flex-1 min-w-0 w-full">
           <div
             className="w-12 h-12 bg-gradient-to-br from-[#10B981] to-[#047857] rounded-xl flex items-center justify-center text-white flex-shrink-0"
             style={{ fontSize: "15px", fontWeight: 600 }}
@@ -225,7 +225,7 @@ function DoctorAppointmentRow({ appointment, index, onAction, onClick }) {
           </div>
         </div>
 
-        <div className="flex flex-col items-end gap-3 flex-shrink-0">
+        <div className="flex flex-col sm:items-end gap-3 flex-shrink-0 w-full sm:w-auto mt-2 sm:mt-0">
           <div className="flex items-center gap-2">
             <span
               className="px-3 py-1 rounded-full border text-[12px] font-semibold"
@@ -440,8 +440,8 @@ export default function AppointmentHistoryPage() {
           )}
         </div>
         {/* Filter tabs */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          <div className="flex items-center bg-[#F3F4F6] p-1 rounded-xl border border-[#E5E7EB] w-fit">
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 mb-6">
+          <div className="flex items-center bg-[#F3F4F6] p-1 rounded-xl border border-[#E5E7EB] w-full sm:w-fit overflow-x-auto overflow-y-hidden whitespace-nowrap">
             {["all", "scheduled", "confirmed", "cancelled"].map((tab) => (
               <button
                 key={tab}

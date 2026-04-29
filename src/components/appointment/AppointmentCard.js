@@ -52,14 +52,14 @@ export function AppointmentCard({ appointment, index = 0, onEdit, onCancel }) {
       transition={{ delay: index * 0.08, duration: 0.4 }}
       className="bg-white rounded-xl p-5 border border-[#E5E7EB] shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.06)] transition-all"
     >
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:justify-between gap-4">
         {/* Left: appointment info */}
-        <div className="flex items-start gap-4 flex-1 min-w-0">
+        <div className="flex items-start gap-4 flex-1 min-w-0 w-full">
           <div className="w-12 h-12 bg-[#f0fdfa] rounded-xl flex items-center justify-center flex-shrink-0">
             <Stethoscope size={22} className="text-[#0d9488]" />
           </div>
 
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 w-full">
             <h3 style={{ fontSize: "16px", fontWeight: 600, color: "#111827" }}>
               {appointment.doctor_name}
             </h3>
@@ -97,7 +97,7 @@ export function AppointmentCard({ appointment, index = 0, onEdit, onCancel }) {
               <motion.div
                 initial={{ opacity: 0, y: -4 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mt-3 flex items-center gap-3 px-4 py-3 bg-[#FEF2F2] border border-[#FECACA] rounded-xl"
+                className="mt-3 flex flex-col sm:flex-row sm:items-center gap-3 px-4 py-3 bg-[#FEF2F2] border border-[#FECACA] rounded-xl"
               >
                 <p style={{ fontSize: "13px", color: "#B91C1C", fontWeight: 500, flex: 1 }}>
                   Cancel this appointment?

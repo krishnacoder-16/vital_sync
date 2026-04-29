@@ -11,7 +11,8 @@ import {
   Stethoscope,
   Sparkles,
   FileText,
-  AlertCircle
+  AlertCircle,
+  Search
 } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
 import { getAppointmentsByDoctor } from "../../lib/appointments";
@@ -20,9 +21,12 @@ import { AppointmentsLineChart } from "../charts/AppointmentsLineChart";
 import { StatusPieChart } from "../charts/StatusPieChart";
 import { getPatientInsights, getHeuristicPriority } from "../../lib/aiDoctor";
 import { DoctorInsightsPanel } from "../ai/DoctorInsightsPanel";
+import { useDashboardSearch } from "../../context/DashboardSearchContext";
+import { getDoctorById } from "../../lib/doctors";
 
 export function DoctorDashboard({ userName = "Dr. Smith" }) {
   const { user } = useAuthStore();
+  const { query: searchQuery, clearSearch } = useDashboardSearch();
   const formattedName = userName.toLowerCase().startsWith("dr")
     ? userName
     : `Dr. ${userName}`;
@@ -31,6 +35,7 @@ export function DoctorDashboard({ userName = "Dr. Smith" }) {
 
   const [allAppointments, setAllAppointments] = useState([]);
   const [scheduleLoading, setScheduleLoading] = useState(true);
+  const [isAvailable, setIsAvailable] = useState(true); // doctor's walk-in availability
   
   // AI Insights Panel State
   const [selectedAppt, setSelectedAppt] = useState(null);
@@ -41,6 +46,14 @@ export function DoctorDashboard({ userName = "Dr. Smith" }) {
   const handleInsightGenerated = (id, data) => {
     setAiData(prev => ({ ...prev, [id]: data }));
   };
+
+  // Fetch doctor availability from profile
+  useEffect(() => {
+    if (!doctorId) return;
+    getDoctorById(doctorId).then(({ data }) => {
+      if (data) setIsAvailable(data.available ?? true);
+    });
+  }, [doctorId]);
 
   useEffect(() => {
     if (!user || !doctorId) return;
@@ -133,7 +146,18 @@ export function DoctorDashboard({ userName = "Dr. Smith" }) {
     };
   });
 
-  // Filter
+  // Filter by search query
+  const query = searchQuery;
+  const q = query.toLowerCase().trim();
+  if (q) {
+    displaySchedule = displaySchedule.filter(a =>
+      a.title.toLowerCase().includes(q) ||
+      a.description.toLowerCase().includes(q) ||
+      (a.time || "").toLowerCase().includes(q)
+    );
+  }
+
+  // Filter by priority
   if (priorityFilter !== "All") {
     displaySchedule = displaySchedule.filter(a => a.priority === priorityFilter);
   }
@@ -143,6 +167,14 @@ export function DoctorDashboard({ userName = "Dr. Smith" }) {
     if (prioritySort === "High to Low") return a.priorityValue - b.priorityValue;
     return b.priorityValue - a.priorityValue;
   });
+
+  // Filter patients by search
+  const filteredPatients = q
+    ? uniquePatients.filter(p =>
+        p.name.toLowerCase().includes(q) ||
+        p.condition.toLowerCase().includes(q)
+      )
+    : uniquePatients;
 
   return (
     <>
@@ -160,12 +192,41 @@ export function DoctorDashboard({ userName = "Dr. Smith" }) {
               Here is your schedule and patient updates for today.
             </p>
           </div>
-          <div className="flex items-center gap-2 bg-white px-4 py-2 border border-[#E5E7EB] rounded-xl shadow-sm">
-            <div className="w-2.5 h-2.5 rounded-full bg-[#10B981]" />
-            <span className="text-sm font-medium text-[#111827]">Available for Walk-ins</span>
+          <div className={`flex items-center gap-2 bg-white px-4 py-2 border rounded-xl shadow-sm ${
+            isAvailable ? 'border-[#10B981]/30' : 'border-[#EF4444]/30'
+          }`}>
+            <div className={`w-2.5 h-2.5 rounded-full ${isAvailable ? 'bg-[#10B981]' : 'bg-[#EF4444]'}`} />
+            <span className={`text-sm font-medium ${isAvailable ? 'text-[#065F46]' : 'text-[#991B1B]'}`}>
+              {isAvailable ? 'Available for Walk-ins' : 'Not Available for Walk-ins'}
+            </span>
           </div>
         </div>
       </motion.div>
+
+      {/* ── Search Header Banner ── */}
+      {q && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-6 flex items-center justify-between gap-4 px-4 py-3 bg-[#f0fdfa] border border-[#99f6e4] rounded-xl"
+        >
+          <div className="flex items-center gap-2 min-w-0">
+            <Search size={16} className="text-[#0d9488] flex-shrink-0" />
+            <p className="text-[14px] text-[#0d9488] font-medium truncate">
+              Showing results for: <span className="font-bold">&ldquo;{query}&rdquo;</span>
+              <span className="ml-2 text-[#6B7280] font-normal">
+                &mdash; {displaySchedule.length} appointment{displaySchedule.length !== 1 ? 's' : ''}, {filteredPatients.length} patient{filteredPatients.length !== 1 ? 's' : ''}
+              </span>
+            </p>
+          </div>
+          <button
+            onClick={clearSearch}
+            className="flex-shrink-0 text-[13px] font-semibold text-[#0d9488] hover:text-[#0f766e] border border-[#0d9488]/30 hover:border-[#0d9488] px-3 py-1 rounded-lg transition-colors"
+          >
+            Clear Search
+          </button>
+        </motion.div>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
@@ -210,6 +271,7 @@ export function DoctorDashboard({ userName = "Dr. Smith" }) {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-12 mb-8">
         {/* Today's Schedule */}
+        {(!q || displaySchedule.length > 0) && (
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -217,7 +279,10 @@ export function DoctorDashboard({ userName = "Dr. Smith" }) {
         >
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <h2 style={{ fontSize: "20px", fontWeight: 600, color: "#111827" }}>
-              Today's Schedule
+              Today&apos;s Schedule
+              {q && (
+                <span className="ml-2 text-[15px] font-normal text-[#6B7280]">({displaySchedule.length})</span>
+              )}
             </h2>
             {!scheduleLoading && displaySchedule.length > 0 && (
               <div className="flex items-center gap-3">
@@ -250,10 +315,18 @@ export function DoctorDashboard({ userName = "Dr. Smith" }) {
               <div className="w-2 h-2 bg-[#0d9488] rounded-full animate-bounce" style={{ animationDelay: "0.2s" }} />
             </div>
           ) : displaySchedule.length === 0 ? (
-            <div className="bg-white rounded-xl border border-[#E5E7EB] p-6 text-center">
-              <p style={{ fontSize: "14px", color: "#6B7280" }}>
-                No appointments found.
-              </p>
+            <div className="bg-white rounded-xl border border-[#E5E7EB] py-12 px-6 text-center">
+              {q ? (
+                <>
+                  <div className="w-12 h-12 bg-[#F3F4F6] rounded-full flex items-center justify-center mx-auto mb-3">
+                    <Search size={22} className="text-[#9CA3AF]" />
+                  </div>
+                  <p className="font-semibold text-[#111827] text-[15px]">No results found</p>
+                  <p className="text-[#6B7280] text-[13px] mt-1">Try searching by name, specialization, or time</p>
+                </>
+              ) : (
+                <p style={{ fontSize: "14px", color: "#6B7280" }}>No appointments scheduled for today.</p>
+              )}
             </div>
           ) : (
             <div className="bg-white rounded-xl border border-[#E5E7EB] shadow-[0_2px_8px_rgba(0,0,0,0.04)] divide-y divide-[#E5E7EB]">
@@ -300,8 +373,10 @@ export function DoctorDashboard({ userName = "Dr. Smith" }) {
             </div>
           )}
         </motion.div>
+        )}
 
         {/* My Patients — derived from real appointments */}
+        {(!q || filteredPatients.length > 0) && (
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -309,6 +384,9 @@ export function DoctorDashboard({ userName = "Dr. Smith" }) {
         >
           <h2 className="mb-6" style={{ fontSize: "20px", fontWeight: 600, color: "#111827" }}>
             My Patients
+            {q && (
+              <span className="ml-2 text-[15px] font-normal text-[#6B7280]">({filteredPatients.length})</span>
+            )}
           </h2>
 
           {scheduleLoading ? (
@@ -317,15 +395,23 @@ export function DoctorDashboard({ userName = "Dr. Smith" }) {
               <div className="w-2 h-2 bg-[#10B981] rounded-full animate-bounce" style={{ animationDelay: "0.1s" }} />
               <div className="w-2 h-2 bg-[#10B981] rounded-full animate-bounce" style={{ animationDelay: "0.2s" }} />
             </div>
-          ) : uniquePatients.length === 0 ? (
-            <div className="bg-white rounded-xl border border-[#E5E7EB] p-6 text-center">
-              <p style={{ fontSize: "14px", color: "#6B7280" }}>
-                No patients yet.
-              </p>
+          ) : filteredPatients.length === 0 ? (
+            <div className="bg-white rounded-xl border border-[#E5E7EB] py-12 px-6 text-center">
+              {q ? (
+                <>
+                  <div className="w-12 h-12 bg-[#F3F4F6] rounded-full flex items-center justify-center mx-auto mb-3">
+                    <Search size={22} className="text-[#9CA3AF]" />
+                  </div>
+                  <p className="font-semibold text-[#111827] text-[15px]">No results found</p>
+                  <p className="text-[#6B7280] text-[13px] mt-1">Try searching by patient name or specialization</p>
+                </>
+              ) : (
+                <p style={{ fontSize: "14px", color: "#6B7280" }}>No patients yet.</p>
+              )}
             </div>
           ) : (
             <div className="flex flex-col gap-4">
-              {uniquePatients.slice(0, 5).map((patient, idx) => (
+              {filteredPatients.slice(0, 5).map((patient, idx) => (
                 <div
                   key={patient.id || idx}
                   className="bg-white rounded-xl p-5 border border-[#E5E7EB] shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.08)] transition-all flex items-start gap-4"
@@ -357,7 +443,32 @@ export function DoctorDashboard({ userName = "Dr. Smith" }) {
             </div>
           )}
         </motion.div>
+        )}
       </div>
+
+      {/* ── Global Empty State — when search yields nothing in both sections ── */}
+      {q && displaySchedule.length === 0 && filteredPatients.length === 0 && !scheduleLoading && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.97 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="mt-4 mb-8 bg-white rounded-2xl border border-[#E5E7EB] py-16 px-8 text-center"
+        >
+          <div className="w-16 h-16 bg-[#F3F4F6] rounded-full flex items-center justify-center mx-auto mb-4">
+            <Search size={28} className="text-[#9CA3AF]" />
+          </div>
+          <p className="font-bold text-[#111827] text-[18px]">No results found</p>
+          <p className="text-[#6B7280] text-[14px] mt-2 max-w-xs mx-auto">
+            No appointments or patients matched &ldquo;<span className="font-semibold text-[#374151]">{query}</span>&rdquo;.
+            Try searching by patient name, specialization, or time.
+          </p>
+          <button
+            onClick={clearSearch}
+            className="mt-5 inline-flex items-center gap-2 bg-[#0d9488] text-white text-[14px] font-semibold px-5 py-2.5 rounded-xl hover:bg-[#0f766e] transition-colors shadow-sm"
+          >
+            Clear Search
+          </button>
+        </motion.div>
+      )}
 
       <DoctorInsightsPanel 
         isOpen={!!selectedAppt}

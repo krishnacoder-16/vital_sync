@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "motion/react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   LayoutDashboard,
   Stethoscope,
@@ -19,10 +19,14 @@ import {
 import { useAuthStore } from "../../store/authStore";
 import { supabase } from "../../lib/supabaseClient";
 import { useRouter, usePathname } from "next/navigation";
+import { DashboardSearchContext } from "../../context/DashboardSearchContext";
 
 export function DashboardLayout({ children, role }) {
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+  const debounceTimer = useRef(null);
   const { user, clearUser } = useAuthStore();
   const router = useRouter();
   const pathname = usePathname();
@@ -31,6 +35,20 @@ export function DashboardLayout({ children, role }) {
   useEffect(() => {
     setIsMobileOpen(false);
   }, [pathname]);
+
+  // Debounce search query — 300ms delay before context update
+  useEffect(() => {
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    debounceTimer.current = setTimeout(() => {
+      setDebouncedQuery(searchQuery);
+    }, 300);
+    return () => clearTimeout(debounceTimer.current);
+  }, [searchQuery]);
+
+  const handleClearSearch = useCallback(() => {
+    setSearchQuery("");
+    setDebouncedQuery("");
+  }, []);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -169,15 +187,27 @@ export function DashboardLayout({ children, role }) {
             >
               <Menu size={24} />
             </button>
-            <div className="flex-1 max-w-xl hidden sm:block">
+            {/* Search bar — visible on ALL screen sizes */}
+            <div className="flex-1 max-w-xl">
               <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#6B7280]" size={20} />
-              <input
-                type="text"
-                placeholder="Search resources..."
-                className="w-full pl-12 pr-4 py-3 rounded-xl bg-[#F9FAFB] border border-transparent focus:border-[#0d9488] focus:outline-none focus:ring-2 focus:ring-[#0d9488]/20 transition-all text-[#111827]"
-                style={{ fontSize: '15px' }}
-              />
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#9CA3AF] pointer-events-none" size={17} />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search doctors, patients, appointments..."
+                  className="w-full pl-10 pr-9 py-2.5 rounded-xl bg-[#F3F4F6] border border-transparent focus:bg-white focus:border-[#0d9488] focus:outline-none focus:ring-2 focus:ring-[#0d9488]/20 transition-all text-[#111827] placeholder:text-[#9CA3AF]"
+                  style={{ fontSize: '14px' }}
+                />
+                {searchQuery && (
+                  <button
+                    onClick={handleClearSearch}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#374151] transition-colors p-0.5 rounded-full hover:bg-[#E5E7EB]"
+                    aria-label="Clear search"
+                  >
+                    <X size={15} />
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -197,7 +227,9 @@ export function DashboardLayout({ children, role }) {
         </div>
 
         <div className="flex-1 p-4 md:p-8 overflow-auto w-full relative">
-          {children}
+          <DashboardSearchContext.Provider value={{ query: debouncedQuery, clearSearch: handleClearSearch }}>
+            {children}
+          </DashboardSearchContext.Provider>
         </div>
       </div>
     </div>

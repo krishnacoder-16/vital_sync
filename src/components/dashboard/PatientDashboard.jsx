@@ -11,6 +11,7 @@ import {
   Clock,
   Activity,
   CheckCircle2,
+  Search,
 } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
 import { getAppointmentsByPatient } from "../../lib/appointments";
@@ -19,6 +20,7 @@ import { supabase } from "../../lib/supabaseClient";
 import toast from "react-hot-toast";
 import { AppointmentsLineChart } from "../charts/AppointmentsLineChart";
 import { StatusPieChart } from "../charts/StatusPieChart";
+import { useDashboardSearch } from "../../context/DashboardSearchContext";
 
 export function PatientDashboard({ userName = "John" }) {
   const router = useRouter();
@@ -79,14 +81,34 @@ export function PatientDashboard({ userName = "John" }) {
   }, []);
 
   // Only upcoming (today or future) sorted nearest first
-  const upcomingAppointments = appointments
+  const { query, clearSearch } = useDashboardSearch();
+  const q = query.toLowerCase().trim();
+
+  const filteredUpcoming = appointments
     .filter((a) => {
       const apptDate = new Date(a.date + 'T00:00:00');
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      return apptDate >= today && a.status !== 'cancelled';
+      const isUpcoming = apptDate >= today && a.status !== 'cancelled';
+      if (!isUpcoming) return false;
+      if (!q) return true;
+      return (
+        (a.doctor_name || '').toLowerCase().includes(q) ||
+        (a.specialization || '').toLowerCase().includes(q) ||
+        (a.time_slot || '').toLowerCase().includes(q)
+      );
     })
     .slice(0, 3);
+
+  const filteredDoctors = q
+    ? doctors.filter(d =>
+        (d.name || '').toLowerCase().includes(q) ||
+        (d.specialization || '').toLowerCase().includes(q) ||
+        (d.location || '').toLowerCase().includes(q)
+      )
+    : doctors;
+
+  const upcomingAppointments = filteredUpcoming;
 
   // Unique doctors the patient has booked with
   const uniqueDoctorNames = [...new Set(appointments.map(a => a.doctor_name))];
@@ -141,6 +163,31 @@ export function PatientDashboard({ userName = "John" }) {
         </p>
       </motion.div>
 
+      {/* ── Search Header Banner ── */}
+      {q && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-6 flex items-center justify-between gap-4 px-4 py-3 bg-[#f0fdfa] border border-[#99f6e4] rounded-xl"
+        >
+          <div className="flex items-center gap-2 min-w-0">
+            <Search size={16} className="text-[#0d9488] flex-shrink-0" />
+            <p className="text-[14px] text-[#0d9488] font-medium truncate">
+              Showing results for: <span className="font-bold">&ldquo;{query}&rdquo;</span>
+              <span className="ml-2 text-[#6B7280] font-normal">
+                &mdash; {upcomingAppointments.length} appointment{upcomingAppointments.length !== 1 ? 's' : ''}, {filteredDoctors.length} doctor{filteredDoctors.length !== 1 ? 's' : ''}
+              </span>
+            </p>
+          </div>
+          <button
+            onClick={clearSearch}
+            className="flex-shrink-0 text-[13px] font-semibold text-[#0d9488] hover:text-[#0f766e] border border-[#0d9488]/30 hover:border-[#0d9488] px-3 py-1 rounded-lg transition-colors"
+          >
+            Clear Search
+          </button>
+        </motion.div>
+      )}
+
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
         {stats.map((stat, index) => (
@@ -183,6 +230,8 @@ export function PatientDashboard({ userName = "John" }) {
       )}
 
       {/* My Upcoming Appointments */}
+      {/* Hide section entirely if search is active and it has zero results (global empty state below handles it) */}
+      {(!q || upcomingAppointments.length > 0) && (
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -192,6 +241,9 @@ export function PatientDashboard({ userName = "John" }) {
         <div className="flex items-center justify-between mb-6">
           <h2 style={{ fontSize: "20px", fontWeight: 600, color: "#111827" }}>
             My Appointments
+            {q && (
+              <span className="ml-2 text-[15px] font-normal text-[#6B7280]">({upcomingAppointments.length})</span>
+            )}
           </h2>
           <button
             onClick={() => router.push("/appointments/history")}
@@ -208,16 +260,26 @@ export function PatientDashboard({ userName = "John" }) {
             <div className="w-2 h-2 bg-[#0d9488] rounded-full animate-bounce" style={{ animationDelay: "0.2s" }} />
           </div>
         ) : upcomingAppointments.length === 0 ? (
-          <div className="bg-white rounded-xl border border-[#E5E7EB] p-6 text-center">
-            <p style={{ fontSize: "14px", color: "#6B7280" }}>
-              No upcoming appointments.{" "}
-              <button
-                onClick={() => router.push("/doctors")}
-                className="text-[#0d9488] font-semibold hover:underline"
-              >
-                Book one now
-              </button>
-            </p>
+          <div className="bg-white rounded-xl border border-[#E5E7EB] py-12 px-6 text-center">
+            {q ? (
+              <>
+                <div className="w-12 h-12 bg-[#F3F4F6] rounded-full flex items-center justify-center mx-auto mb-3">
+                  <Search size={22} className="text-[#9CA3AF]" />
+                </div>
+                <p className="font-semibold text-[#111827] text-[15px]">No results found</p>
+                <p className="text-[#6B7280] text-[13px] mt-1">Try searching by doctor name, specialization, or time</p>
+              </>
+            ) : (
+              <p style={{ fontSize: "14px", color: "#6B7280" }}>
+                No upcoming appointments.{" "}
+                <button
+                  onClick={() => router.push("/doctors")}
+                  className="text-[#0d9488] font-semibold hover:underline"
+                >
+                  Book one now
+                </button>
+              </p>
+            )}
           </div>
         ) : (
           <div className="bg-white rounded-xl border border-[#E5E7EB] shadow-[0_2px_8px_rgba(0,0,0,0.04)] divide-y divide-[#E5E7EB]">
@@ -258,8 +320,11 @@ export function PatientDashboard({ userName = "John" }) {
           </div>
         )}
       </motion.div>
+      )}
 
       {/* Available Doctors — from Supabase */}
+      {/* Hide section entirely if search is active and it has zero results (global empty state below handles it) */}
+      {(!q || filteredDoctors.length > 0) && (
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -269,6 +334,9 @@ export function PatientDashboard({ userName = "John" }) {
         <div className="flex items-center justify-between mb-6">
           <h2 style={{ fontSize: "20px", fontWeight: 600, color: "#111827" }}>
             Available Doctors
+            {q && (
+              <span className="ml-2 text-[15px] font-normal text-[#6B7280]">({filteredDoctors.length})</span>
+            )}
           </h2>
           <button
             onClick={() => router.push("/doctors")}
@@ -284,15 +352,23 @@ export function PatientDashboard({ userName = "John" }) {
             <div className="w-2 h-2 bg-[#10B981] rounded-full animate-bounce" style={{ animationDelay: "0.1s" }} />
             <div className="w-2 h-2 bg-[#10B981] rounded-full animate-bounce" style={{ animationDelay: "0.2s" }} />
           </div>
-        ) : doctors.length === 0 ? (
-          <div className="bg-white rounded-xl border border-[#E5E7EB] p-6 text-center">
-            <p style={{ fontSize: "14px", color: "#6B7280" }}>
-              No doctors found. Check back later.
-            </p>
+        ) : filteredDoctors.length === 0 ? (
+          <div className="bg-white rounded-xl border border-[#E5E7EB] py-12 px-6 text-center">
+            {q ? (
+              <>
+                <div className="w-12 h-12 bg-[#F3F4F6] rounded-full flex items-center justify-center mx-auto mb-3">
+                  <Search size={22} className="text-[#9CA3AF]" />
+                </div>
+                <p className="font-semibold text-[#111827] text-[15px]">No results found</p>
+                <p className="text-[#6B7280] text-[13px] mt-1">Try searching by doctor name, specialization, or location</p>
+              </>
+            ) : (
+              <p style={{ fontSize: "14px", color: "#6B7280" }}>No doctors found. Check back later.</p>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-            {doctors.slice(0, 4).map((doctor, index) => {
+            {filteredDoctors.slice(0, 4).map((doctor, index) => {
               const isAvailable = doctor.available ?? true;
               return (
                 <motion.div
@@ -371,6 +447,31 @@ export function PatientDashboard({ userName = "John" }) {
           </div>
         )}
       </motion.div>
+      )}
+
+      {/* ── Global Empty State — shown when search yields zero results in BOTH sections ── */}
+      {q && upcomingAppointments.length === 0 && filteredDoctors.length === 0 && !apptLoading && !doctorsLoading && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.97 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="mt-12 bg-white rounded-2xl border border-[#E5E7EB] py-16 px-8 text-center"
+        >
+          <div className="w-16 h-16 bg-[#F3F4F6] rounded-full flex items-center justify-center mx-auto mb-4">
+            <Search size={28} className="text-[#9CA3AF]" />
+          </div>
+          <p className="font-bold text-[#111827] text-[18px]">No results found</p>
+          <p className="text-[#6B7280] text-[14px] mt-2 max-w-xs mx-auto">
+            No appointments or doctors matched &ldquo;<span className="font-semibold text-[#374151]">{query}</span>&rdquo;.
+            Try searching by name, specialization, or location.
+          </p>
+          <button
+            onClick={clearSearch}
+            className="mt-5 inline-flex items-center gap-2 bg-[#0d9488] text-white text-[14px] font-semibold px-5 py-2.5 rounded-xl hover:bg-[#0f766e] transition-colors shadow-sm"
+          >
+            Clear Search
+          </button>
+        </motion.div>
+      )}
 
       {/* Recent Activity — derived from real appointments */}
       <motion.div

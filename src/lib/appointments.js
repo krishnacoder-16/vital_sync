@@ -1,4 +1,5 @@
 import { supabase } from './supabaseClient';
+import { createNotification } from './notifications';
 
 /**
  * Fetch all appointments for a logged-in patient.
@@ -63,6 +64,16 @@ export async function createAppointment({
     ])
     .select()
     .single();
+
+  if (data && !error) {
+    // Notify the doctor about the new appointment request
+    await createNotification({
+      userId: doctorId, // Notify the doctor
+      title: 'New Appointment Request',
+      message: `${patientName} requested an appointment for ${specialization} on ${date} at ${timeSlot}.`,
+      type: 'appointment_booked',
+    });
+  }
 
   return { data, error };
 }
@@ -130,6 +141,20 @@ export async function updateAppointmentStatus(id, status) {
     };
   }
 
-  console.log('[updateAppointmentStatus] Success:', data[0]);
-  return { data: data[0], error: null };
+  const appt = data[0];
+  console.log('[updateAppointmentStatus] Success:', appt);
+
+  // Notify the patient about the status change
+  if (appt && appt.patient_id) {
+    await createNotification({
+      userId: appt.patient_id, // Notify the patient
+      title: status === 'confirmed' ? 'Appointment Confirmed' : 'Appointment Cancelled',
+      message: status === 'confirmed' 
+        ? `Your appointment with ${appt.doctor_name || 'your doctor'} on ${appt.date} at ${appt.time_slot} has been confirmed.`
+        : `Your appointment with ${appt.doctor_name || 'your doctor'} on ${appt.date} at ${appt.time_slot} was cancelled.`,
+      type: `appointment_${status}`,
+    });
+  }
+
+  return { data: appt, error: null };
 }

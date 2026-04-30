@@ -20,6 +20,7 @@ import { useAuthStore } from "../../store/authStore";
 import { supabase } from "../../lib/supabaseClient";
 import { useRouter, usePathname } from "next/navigation";
 import { DashboardSearchContext } from "../../context/DashboardSearchContext";
+import { NotificationBell } from "./NotificationBell";
 
 export function DashboardLayout({ children, role }) {
   const [isCollapsed, setIsCollapsed] = useState(true);
@@ -213,10 +214,7 @@ export function DashboardLayout({ children, role }) {
           </div>
 
           <div className="flex items-center gap-3 sm:gap-4 ml-4 sm:ml-8 flex-shrink-0">
-            <button className="relative p-2 hover:bg-[#F9FAFB] rounded-xl transition-colors">
-              <Bell size={22} className="text-[#6B7280]" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-[#EF4444] rounded-full"></span>
-            </button>
+            <NotificationBell />
             <button onClick={handleLogout} className="relative p-2 hover:bg-[#FEE2E2] rounded-xl transition-colors text-[#6B7280] hover:text-[#EF4444]" title="Logout">
               <LogOut size={22} />
             </button>

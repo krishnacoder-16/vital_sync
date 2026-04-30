@@ -22,6 +22,7 @@ import { AppointmentsLineChart } from "../charts/AppointmentsLineChart";
 import { StatusPieChart } from "../charts/StatusPieChart";
 import { useDashboardSearch } from "../../context/DashboardSearchContext";
 import { appointmentMatchesPatient, doctorMatchesQuery } from "../../lib/searchFilters";
+import { StatCardSkeleton, AppointmentRowSkeleton, DoctorCardSkeleton } from "../common/Skeletons";
 
 export function PatientDashboard({ userName = "John" }) {
   const router = useRouter();
@@ -178,6 +179,9 @@ export function PatientDashboard({ userName = "John" }) {
       )}
 
       {/* Stats */}
+      {apptLoading ? (
+        <StatCardSkeleton />
+      ) : (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
         {stats.map((stat, index) => (
           <motion.div
@@ -204,6 +208,7 @@ export function PatientDashboard({ userName = "John" }) {
           </motion.div>
         ))}
       </div>
+      )}
 
       {/* ── Charts ── */}
       {!apptLoading && appointments.length > 0 && (
@@ -243,11 +248,7 @@ export function PatientDashboard({ userName = "John" }) {
         </div>
 
         {apptLoading ? (
-          <div className="flex gap-2 py-4">
-            <div className="w-2 h-2 bg-[#0d9488] rounded-full animate-bounce" />
-            <div className="w-2 h-2 bg-[#0d9488] rounded-full animate-bounce" style={{ animationDelay: "0.1s" }} />
-            <div className="w-2 h-2 bg-[#0d9488] rounded-full animate-bounce" style={{ animationDelay: "0.2s" }} />
-          </div>
+          <AppointmentRowSkeleton count={3} />
         ) : upcomingAppointments.length === 0 ? (
           <div className="bg-white rounded-xl border border-[#E5E7EB] py-12 px-6 text-center">
             {q ? (
@@ -336,11 +337,7 @@ export function PatientDashboard({ userName = "John" }) {
         </div>
 
         {doctorsLoading ? (
-          <div className="flex gap-2 py-4">
-            <div className="w-2 h-2 bg-[#10B981] rounded-full animate-bounce" />
-            <div className="w-2 h-2 bg-[#10B981] rounded-full animate-bounce" style={{ animationDelay: "0.1s" }} />
-            <div className="w-2 h-2 bg-[#10B981] rounded-full animate-bounce" style={{ animationDelay: "0.2s" }} />
-          </div>
+          <DoctorCardSkeleton count={2} />
         ) : filteredDoctors.length === 0 ? (
           <div className="bg-white rounded-xl border border-[#E5E7EB] py-12 px-6 text-center">
             {q ? (

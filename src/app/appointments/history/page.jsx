@@ -17,6 +17,7 @@ import {
 import { supabase } from "../../../lib/supabaseClient";
 import { getHeuristicPriority } from "../../../lib/aiDoctor";
 import { DoctorInsightsPanel } from "../../../components/ai/DoctorInsightsPanel";
+import { AppointmentRowSkeleton, Spinner } from "../../../components/common/Skeletons";
 
 // ─── Time slots (same as booking page) ──────────────────────────────────────
 const TIME_SLOTS = [
@@ -58,7 +59,7 @@ function EditModal({ appointment, onSave, onClose }) {
           {/* Modal header */}
           <div className="px-6 py-5 border-b border-[#E5E7EB]">
             <h2 style={{ fontSize: "20px", fontWeight: 700, color: "#111827" }}>
-              Edit Appointment
+              Reschedule Appointment
             </h2>
             <p className="mt-1 text-[13px] text-[#6B7280]">
               {appointment.doctor_name} · {appointment.specialization}
@@ -249,18 +250,18 @@ function DoctorAppointmentRow({ appointment, index, onAction, onClick }) {
               <button
                 onClick={(e) => handleAction("confirmed", e)}
                 disabled={acting}
-                className="flex items-center gap-1.5 px-4 py-2 bg-[#10B981] text-white rounded-lg hover:bg-[#059669] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-1.5 px-4 py-2 bg-[#10B981] text-white rounded-lg hover:bg-[#059669] transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-w-[90px] justify-center"
                 style={{ fontSize: "13px", fontWeight: 600 }}
               >
-                <CheckCircle2 size={14} /> Accept
+                {acting ? <Spinner size={14} /> : <><CheckCircle2 size={14} /> Accept</>}
               </button>
               <button
                 onClick={(e) => handleAction("cancelled", e)}
                 disabled={acting}
-                className="flex items-center gap-1.5 px-4 py-2 bg-white border border-[#FECACA] text-[#EF4444] rounded-lg hover:bg-[#FEF2F2] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-1.5 px-4 py-2 bg-white border border-[#FECACA] text-[#EF4444] rounded-lg hover:bg-[#FEF2F2] transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-w-[90px] justify-center"
                 style={{ fontSize: "13px", fontWeight: 600 }}
               >
-                <XCircle size={14} /> Reject
+                {acting ? <Spinner size={14} /> : <><XCircle size={14} /> Reject</>}
               </button>
             </div>
           )}
@@ -323,20 +324,7 @@ export default function AppointmentHistoryPage() {
       prev.map(a => a.id === id ? { ...a, ...data } : a)
     );
     setEditTarget(null);
-    toast.success("Appointment updated successfully!");
-  };
-
-  // ── Patient: Cancel (soft delete → status = "cancelled") ──
-  const handleCancel = async (id) => {
-    const { error } = await updateAppointmentStatus(id, "cancelled");
-    if (error) {
-      toast.error(error.message || "Failed to cancel appointment.");
-      return;
-    }
-    setAppointments(prev =>
-      prev.map(a => a.id === id ? { ...a, status: "cancelled" } : a)
-    );
-    toast.success("Appointment cancelled.");
+    toast.success("Appointment rescheduled successfully!");
   };
 
   // ── Initial load + real-time ──
@@ -490,13 +478,7 @@ export default function AppointmentHistoryPage() {
 
         {/* Content */}
         {isLoading ? (
-          <div className="flex justify-center py-20">
-            <div className="flex gap-2">
-              <div className="w-2.5 h-2.5 bg-[#0d9488] rounded-full animate-bounce" />
-              <div className="w-2.5 h-2.5 bg-[#0d9488] rounded-full animate-bounce" style={{ animationDelay: "0.1s" }} />
-              <div className="w-2.5 h-2.5 bg-[#0d9488] rounded-full animate-bounce" style={{ animationDelay: "0.2s" }} />
-            </div>
-          </div>
+          <AppointmentRowSkeleton count={5} />
         ) : processedAppointments.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="w-16 h-16 bg-[#f0fdfa] rounded-full flex items-center justify-center mb-4">
@@ -539,7 +521,6 @@ export default function AppointmentHistoryPage() {
                 appointment={appt}
                 index={index}
                 onEdit={setEditTarget}
-                onCancel={handleCancel}
               />
             ))}
           </div>

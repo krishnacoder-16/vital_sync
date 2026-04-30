@@ -67,12 +67,15 @@ export async function createAppointment({
 
   if (data && !error) {
     // Notify the doctor about the new appointment request
-    await createNotification({
+    const notifResponse = await createNotification({
       userId: doctorId, // Notify the doctor
       title: 'New Appointment Request',
       message: `${patientName} requested an appointment for ${specialization} on ${date} at ${timeSlot}.`,
       type: 'appointment_booked',
     });
+    if (notifResponse.error) {
+      console.error('[createNotification error]', notifResponse.error);
+    }
   }
 
   return { data, error };
@@ -80,15 +83,37 @@ export async function createAppointment({
 
 /**
  * Update editable fields of an appointment (date, time_slot, notes).
- * Only patients should call this on their own scheduled appointments.
+ * Handles the one-time reschedule logic.
  * @param {string} id - The appointment UUID
  * @param {{ date?: string, time_slot?: string, notes?: string }} updates
  * @returns {{ data: object|null, error: object|null }}
  */
 export async function updateAppointment(id, updates) {
+  // 1. Fetch current appointment to check reschedule status
+  const { data: existingAppt, error: fetchError } = await supabase
+    .from('appointments')
+    .select('is_rescheduled')
+    .eq('id', id)
+    .single();
+
+  if (fetchError) {
+    return { data: null, error: { message: 'Failed to fetch appointment details.' } };
+  }
+
+  if (existingAppt.is_rescheduled) {
+    return { data: null, error: { message: 'You can only reschedule once' } };
+  }
+
+  // 2. Enforce one-time reschedule rules
+  const finalUpdates = {
+    ...updates,
+    status: 'rescheduled',
+    is_rescheduled: true,
+  };
+
   const { data, error } = await supabase
     .from('appointments')
-    .update(updates)
+    .update(finalUpdates)
     .eq('id', id)
     .select();
 
@@ -116,11 +141,20 @@ export async function updateAppointment(id, updates) {
  * Supabase does not return an error if RLS blocks the update — it just
  * silently updates 0 rows. Checking that data.length > 0 catches this.
  *
- * @param {string} id - The appointment UUID
+ * @param {string} id     - The appointment UUID
  * @param {string} status - "confirmed" | "cancelled"
+ * @param {string} [role] - Optional role guard: "patient" | "doctor"
  * @returns {{ data: object|null, error: object|null }}
  */
-export async function updateAppointmentStatus(id, status) {
+export async function updateAppointmentStatus(id, status, role) {
+  // Role-based guard — patients are not allowed to cancel appointments
+  if (role === 'patient' && status === 'cancelled') {
+    return {
+      data: null,
+      error: { message: 'Patients cannot cancel appointments. Please contact your doctor.' },
+    };
+  }
+
   const { data, error } = await supabase
     .from('appointments')
     .update({ status })
@@ -146,7 +180,7 @@ export async function updateAppointmentStatus(id, status) {
 
   // Notify the patient about the status change
   if (appt && appt.patient_id) {
-    await createNotification({
+    const notifResponse = await createNotification({
       userId: appt.patient_id, // Notify the patient
       title: status === 'confirmed' ? 'Appointment Confirmed' : 'Appointment Cancelled',
       message: status === 'confirmed' 
@@ -154,6 +188,9 @@ export async function updateAppointmentStatus(id, status) {
         : `Your appointment with ${appt.doctor_name || 'your doctor'} on ${appt.date} at ${appt.time_slot} was cancelled.`,
       type: `appointment_${status}`,
     });
+    if (notifResponse.error) {
+      console.error('[createNotification error]', notifResponse.error);
+    }
   }
 
   return { data: appt, error: null };

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "motion/react";
-import { Calendar, Clock, Stethoscope, CheckCircle2, XCircle, AlertCircle, Pencil } from "lucide-react";
+import { Calendar, Clock, Stethoscope, CheckCircle2, XCircle, AlertCircle, Pencil, CalendarClock, RefreshCw } from "lucide-react";
 
 const STATUS_CONFIG = {
   confirmed: {
@@ -26,24 +26,30 @@ const STATUS_CONFIG = {
     bg: "#FEF2F2",
     border: "#FECACA",
   },
+  rescheduled: {
+    label: "Rescheduled",
+    icon: RefreshCw,
+    color: "#2563EB", // Blue
+    bg: "#EFF6FF",
+    border: "#BFDBFE",
+  },
 };
 
 /**
- * AppointmentCard — patient-facing read/edit/cancel card.
+ * AppointmentCard — patient-facing read/reschedule card.
  *
  * Props:
  *  appointment  — the appointment object
  *  index        — for staggered animation
  *  onEdit(appt) — called when patient clicks Edit (only for scheduled)
- *  onCancel(id) — called when patient clicks Cancel (not for already-cancelled)
  */
-export function AppointmentCard({ appointment, index = 0, onEdit, onCancel }) {
-  const [confirmCancel, setConfirmCancel] = useState(false);
+export function AppointmentCard({ appointment, index = 0, onEdit }) {
   const status = STATUS_CONFIG[appointment.status] || STATUS_CONFIG.scheduled;
   const StatusIcon = status.icon;
 
-  const isScheduled  = appointment.status === "scheduled";
-  const isCancelled  = appointment.status === "cancelled";
+  const isScheduled = appointment.status === "scheduled";
+  const isCancelled = appointment.status === "cancelled";
+  const canReschedule = !isCancelled && !appointment.is_rescheduled;
 
   return (
     <motion.div
@@ -91,33 +97,6 @@ export function AppointmentCard({ appointment, index = 0, onEdit, onCancel }) {
                 {appointment.notes}
               </p>
             )}
-
-            {/* Inline cancel confirmation */}
-            {confirmCancel && (
-              <motion.div
-                initial={{ opacity: 0, y: -4 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mt-3 flex flex-col sm:flex-row sm:items-center gap-3 px-4 py-3 bg-[#FEF2F2] border border-[#FECACA] rounded-xl"
-              >
-                <p style={{ fontSize: "13px", color: "#B91C1C", fontWeight: 500, flex: 1 }}>
-                  Cancel this appointment?
-                </p>
-                <button
-                  onClick={() => { onCancel(appointment.id); setConfirmCancel(false); }}
-                  className="px-3 py-1.5 bg-[#EF4444] text-white rounded-lg hover:bg-[#DC2626] transition-colors"
-                  style={{ fontSize: "12px", fontWeight: 600 }}
-                >
-                  Yes, Cancel
-                </button>
-                <button
-                  onClick={() => setConfirmCancel(false)}
-                  className="px-3 py-1.5 bg-white border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB] transition-colors"
-                  style={{ fontSize: "12px", fontWeight: 600, color: "#374151" }}
-                >
-                  Keep
-                </button>
-              </motion.div>
-            )}
           </div>
         </div>
 
@@ -134,27 +113,15 @@ export function AppointmentCard({ appointment, index = 0, onEdit, onCancel }) {
             </span>
           </div>
 
-          {/* Edit — scheduled only */}
-          {isScheduled && onEdit && !confirmCancel && (
+          {/* Reschedule — visible if not cancelled and hasn't been rescheduled yet */}
+          {canReschedule && onEdit && (
             <button
               onClick={() => onEdit(appointment)}
-              className="flex items-center gap-1.5 px-3 py-1.5 border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB] transition-colors"
-              style={{ fontSize: "12px", fontWeight: 600, color: "#374151" }}
-            >
-              <Pencil size={12} />
-              Edit
-            </button>
-          )}
-
-          {/* Cancel — not for already-cancelled */}
-          {!isCancelled && onCancel && !confirmCancel && (
-            <button
-              onClick={() => setConfirmCancel(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 border border-[#FECACA] text-[#EF4444] rounded-lg hover:bg-[#FEF2F2] transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#f0fdfa] border border-[#99f6e4] text-[#0d9488] rounded-lg hover:bg-[#ccfbf1] transition-colors"
               style={{ fontSize: "12px", fontWeight: 600 }}
             >
-              <XCircle size={12} />
-              Cancel
+              <CalendarClock size={12} />
+              Reschedule
             </button>
           )}
         </div>

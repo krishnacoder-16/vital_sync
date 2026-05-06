@@ -17,8 +17,9 @@ import {
 import { useAuthStore } from "../../store/authStore";
 import { getAppointmentsByDoctor } from "../../lib/appointments";
 import { supabase } from "../../lib/supabaseClient";
-import { AppointmentsLineChart } from "../charts/AppointmentsLineChart";
-import { StatusPieChart } from "../charts/StatusPieChart";
+import dynamic from "next/dynamic";
+const AppointmentsLineChart = dynamic(() => import("../charts/AppointmentsLineChart").then(m => m.AppointmentsLineChart), { ssr: false, loading: () => <div className="h-64 bg-gray-100 rounded-xl animate-pulse"></div> });
+const StatusPieChart = dynamic(() => import("../charts/StatusPieChart").then(m => m.StatusPieChart), { ssr: false, loading: () => <div className="h-64 bg-gray-100 rounded-xl animate-pulse"></div> });
 import { getPatientInsights, getHeuristicPriority } from "../../lib/aiDoctor";
 import { DoctorInsightsPanel } from "../ai/DoctorInsightsPanel";
 import { useDashboardSearch } from "../../context/DashboardSearchContext";

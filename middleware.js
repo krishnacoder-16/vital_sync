@@ -10,14 +10,14 @@ const PROTECTED_ROUTES = ['/dashboard', '/appointments', '/doctors'];
 export async function middleware(request) {
   const { pathname } = request.nextUrl;
 
-  // Build a response object we can mutate (needed to refresh cookies)
+
   let response = NextResponse.next({
     request: {
       headers: request.headers,
     },
   });
 
-  // Create a server-side Supabase client that reads/writes cookies
+  
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
@@ -68,8 +68,6 @@ export async function middleware(request) {
   return response;
 }
 
-// Tell Next.js which paths to run middleware on
-// Exclude static files, API routes, and Next.js internals
 export const config = {
   matcher: [
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',

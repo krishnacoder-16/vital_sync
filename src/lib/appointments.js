@@ -136,11 +136,6 @@ export async function updateAppointment(id, updates) {
 /**
  * Update the status of an appointment.
  * Used by doctors to confirm or cancel appointment requests.
- *
- * IMPORTANT: We use .select() after .update() to detect silent RLS failures.
- * Supabase does not return an error if RLS blocks the update — it just
- * silently updates 0 rows. Checking that data.length > 0 catches this.
- *
  * @param {string} id     - The appointment UUID
  * @param {string} status - "confirmed" | "cancelled"
  * @param {string} [role] - Optional role guard: "patient" | "doctor"

@@ -8,7 +8,6 @@ export async function POST(req) {
     const { patient_name, specialization, notes } = await req.json();
 
     if (!process.env.GEMINI_API_KEY) {
-      // Mock fallback if no API key is provided
       let priority = "Low";
       const s = (notes || specialization || "").toLowerCase();
       if (s.includes("chest") || s.includes("pain") || s.includes("emergency") || s.includes("breath")) {

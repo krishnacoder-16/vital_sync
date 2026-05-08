@@ -1,5 +1,9 @@
 # 🏥 VitalSync – Healthcare Patient Dashboard (Frontend)
 
+## 🚀 Live Demo
+
+👉 **[View Live Application on Vercel](https://vital-sync-seven.vercel.app/login)**
+
 ---
 
 ## 📌 Project Overview
@@ -124,14 +128,14 @@ Global state is managed using Zustand:
 
 ---
 
-## 🔌 API Design (Mocked)
+## 🔌 API & Database (Supabase)
 
-The application uses a simulated API layer:
+The application has been upgraded from mocked endpoints to a production-grade backend using **Supabase (PostgreSQL)**:
 
-* Fetch doctors
-* Book appointments
-* Manage availability
-* Simulate loading and delays
+* Real-time Database (WebSockets)
+* Row Level Security (RLS) policies
+* Supabase Authentication (Email/Password)
+* AI Integrations (Gemini API routes)
 
 ---
 
@@ -140,30 +144,33 @@ The application uses a simulated API layer:
 ```text
 src/
 ├── app/
+│   ├── ai-check/
+│   ├── api/
+│   │   ├── ai/
+│   │   └── ai-doctor/
 │   ├── appointments/
-│   ├── auth/
+│   │   ├── book/
+│   │   └── history/
 │   ├── dashboard/
 │   ├── doctors/
+│   │   └── [id]/
+│   ├── forgot-password/
+│   ├── login/
 │   ├── profile/
-│   ├── layout.js
-│   └── page.js
+│   ├── register/
+│   └── reset-password/
 ├── components/
+│   ├── ai/
 │   ├── appointment/
+│   ├── auth/
+│   ├── charts/
 │   ├── common/
 │   ├── dashboard/
 │   ├── doctor/
 │   └── layout/
-├── constants/
-├── data/
-├── features/
-│   ├── appointments/
-│   ├── auth/
-│   └── doctors/
-├── hooks/
+├── context/
 ├── lib/
-├── store/
-├── styles/
-└── utils/
+└── store/
 ```
 
 ---
@@ -183,11 +190,11 @@ src/
 
 ## 🚀 Future Enhancements
 
-* Real-time doctor availability
-* Notifications system
-* Video consultation integration
-* Admin dashboard
-* Backend integration (Node.js + MongoDB)
+* Video consultation integration (WebRTC/Daily.co)
+* Dedicated Admin dashboard for platform analytics
+* Automated prescription generation & sharing
+* Integration with smart wearables (Apple Health/Google Fit)
+* Payment gateway for paid consultations (Stripe)
 
 ---
 

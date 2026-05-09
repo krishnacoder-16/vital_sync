@@ -29,12 +29,14 @@ The goal of this project is to design and develop a **scalable and visually poli
 
 ## ⚙️ Tech Stack
 
-* **Framework:** Next.js (App Router)
+* **Framework:** Next.js 14 (App Router)
 * **Styling:** Tailwind CSS
 * **State Management:** Zustand
+* **Database & Auth:** Supabase (PostgreSQL, Row Level Security, Realtime)
+* **AI:** Google Gemini API (`gemini-2.5-flash`) via Next.js Route Handlers
 * **Design Tool:** Figma
-* **API Handling:** Mock API (Simulated backend)
-* **Language:** JavaScript / TypeScript
+* **Language:** JavaScript
+* **Deployment:** Vercel
 
 ---
 
@@ -130,13 +132,27 @@ Global state is managed using Zustand:
 
 ## 🔌 API & Database (Supabase)
 
-The application has been upgraded from mocked endpoints to a production-grade backend using **Supabase (PostgreSQL)**:
+The application uses a production-grade backend with **Supabase (PostgreSQL)**:
 
-* Real-time Database (WebSockets)
-* Row Level Security (RLS) policies
-* Supabase Authentication (Email/Password)
-* AI Integrations (Gemini API routes)
+* Real-time Database (WebSockets via `supabase.channel`)
+* Row Level Security (RLS) policies per table
+* Supabase Authentication (Email/Password with session persistence)
+* AI Integrations via Next.js Route Handlers (Gemini API, server-side only)
 
+---
+
+## 🔑 Environment Variables
+
+Create a `.env.local` file in the project root with the following keys:
+
+```env
+# Supabase — required for database and auth
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+
+# Google Gemini — required for AI features (symptom checker & doctor insights)
+GEMINI_API_KEY=your-gemini-api-key
+```
 ---
 
 ## 🧱 Project Structure
